@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "w25q64.h"
+#include "logger.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,8 +64,6 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t buf[W25_PAGE_SIZE*2];
-volatile uint8_t irq_flag = 0;
 
 /* USER CODE END 0 */
 
@@ -100,80 +99,40 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  W25_ResetClock();
 
 
-  // RX DMA
-#if 0
-
-  HAL_UART_Receive_DMA(&huart1, buf, W25_PAGE_SIZE*2);
+  Logger_Init();
 
 
-  while(1){
-    uint8_t res = 0;
-    uint8_t *pointer;
-    static int page_counter = 0;
-
-    while (!res) {res = irq_flag;}
-    irq_flag = 0;
-    if (res == 1) { // half
-      pointer = &buf[0];
-    }
-    if (res == 2) { // full
-      pointer = &buf[W25_PAGE_SIZE];
-    }
-
-    W25_WriteEnable();
-    W25_WritePage(page_counter, pointer, W25_PAGE_SIZE);
-    while (W25_GetStatus()) {};
-
-    page_counter++;
-  };
-#endif
-
-
-  // ERASE
-#if 0
-
-  W25_WriteEnable();
-  W25_ChipErase();
-  int i = 0;
-  while (W25_GetStatus()) {
-    i++;
-  }
-  while(1);
-
-#endif
-  // DUMP
-#if 1
-
-  uint8_t b;
   while (1) {
-    HAL_UART_Receive(&huart1, &b, 1, HAL_MAX_DELAY);
-    if (b == '1') {
-      W25_Dump();
+
+    Logger_Loop();
+
+    if (Logger_KeyPressed()) { // Enter CLI mode
+
+      Logger_Stop();
+
+      LED_Blink(3);
+      while (!Logger_KeyUnpressed()) {};
+
+      while (1) { // CLI infinite loop
+
+        uint8_t cmd;
+        HAL_UART_Receive(&huart1, &cmd, 1, 100);
+        if (cmd == '1') {
+          Logger_Dump(200);
+        }
+        if (cmd == '2') {
+          Logger_Dump(W25_PAGE_COUNT);
+        }
+
+        if (Logger_KeyPressed()) {
+          Logger_Erase();
+          while (1);
+        }
+      }
     }
   }
-
-#endif
-  // WRITE INC
-#if 0
-
-  W25_WriteEnable();
-  W25_WriteIncrements(1);
-  while (W25_GetStatus()) {};
-  W25_WriteEnable();
-  W25_WriteIncrements(4);
-  while (W25_GetStatus()) {};
-
-
-  while (1);
-
-#endif
-
-
-
-
 
   /* USER CODE END 2 */
 

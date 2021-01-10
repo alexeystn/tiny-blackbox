@@ -3,9 +3,8 @@
 #define W25Q64_H
 
 
-
 #define W25_PAGE_SIZE      256
-#define W25_PAGE_COUNT     10
+#define W25_PAGE_COUNT     32768
 
 
 #define W25_WRITE_ENABLE  0x06 // bit must be set prior to every write/erase instruction
@@ -23,9 +22,9 @@ void W25_ResetClock(void);
 void W25_Dump(void);
 void W25_WriteEnable(void);
 uint8_t W25_GetStatus(void);
-void W25_WriteIncrements(int pn);
-void W25_ChipErase(void);
+void W25_ReadPage(int n, uint8_t *data);
 void W25_WritePage(int page_num, uint8_t* data, uint16_t size);
+void W25_ChipErase(void);
 
 
 #endif
