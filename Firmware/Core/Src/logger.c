@@ -66,16 +66,10 @@ void Logger_Dump(int n)
   uint8_t buf[W25_PAGE_SIZE];
 
   for (int i = 0; i < n; i++) {
-    W25_ReadPage(n, buf);
+    W25_ReadPage(i, buf);
     HAL_UART_Transmit(HUART, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
   }
-
 }
-
-
-
-
-
 
 
 
@@ -103,6 +97,23 @@ void Logger_Init(void)
 {
   W25_ResetClock();
   // TODO: find first empty page
+  uint8_t buf[W25_PAGE_SIZE];
+  uint8_t pageIsEmpty;
+
+  for (pagePointer = 0; pagePointer < W25_PAGE_COUNT; pagePointer++) {
+    pageIsEmpty = 1;
+    W25_ReadPage(pagePointer, buf);
+    for (int j = 0; j < W25_PAGE_SIZE; j++) {
+      if (buf[j] != 0xFF) {
+        pageIsEmpty = 0;
+        break;
+      }
+    }
+    if (pageIsEmpty) {
+      break;
+    }
+  }
+
   HAL_UART_Receive_DMA(&huart1, bufUartRx, W25_PAGE_SIZE*2);
 }
 
@@ -130,15 +141,16 @@ void Logger_Loop(void)
   while (W25_GetStatus()) {};
 
   pagePointer++;
+  // TODO: check if memory full
 }
 
 
 
 void Logger_Stop(void)
 {
-
+  HAL_UART_AbortReceive(HUART);
+  HAL_UART_DMAStop(HUART);
 }
-
 
 
 

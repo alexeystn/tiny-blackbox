@@ -101,6 +101,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
+  while (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {};
+
+
   Logger_Init();
 
 
@@ -120,7 +123,7 @@ int main(void)
         uint8_t cmd;
         HAL_UART_Receive(&huart1, &cmd, 1, 100);
         if (cmd == '1') {
-          Logger_Dump(200);
+          Logger_Dump(1000);
         }
         if (cmd == '2') {
           Logger_Dump(W25_PAGE_COUNT);
@@ -140,8 +143,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-
 
     /* USER CODE END WHILE */
 

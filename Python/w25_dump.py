@@ -22,12 +22,3 @@ with serial.Serial(port, 1500000, timeout=100) as ser:
 with open('output.bin', 'wb') as f:
     f.write(d)
 
-
-
-
-
-##    a = np.arange(0,256).astype('uint8')
-##    for i in range(5):
-##        #print(i)
-##        ser.write(a.tobytes())
-##        time.sleep(0.1)
