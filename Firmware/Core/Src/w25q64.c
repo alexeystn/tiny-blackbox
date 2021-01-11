@@ -7,9 +7,8 @@
 #define HSPI     &hspi1
 #define HSPI_DMA &hdma_spi1_tx
 
-static uint8_t bufTx[256];
-static uint8_t bufRx[256];
-static uint8_t bufCmd[4];
+static uint8_t bufTx[4];
+static uint8_t bufRx[4];
 
 
 uint8_t dma_flag = 0;
@@ -20,13 +19,17 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 }
 
 
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  dma_flag = 1;
+}
+
+
 static void DMA_Wait()
 {
   while (!dma_flag) {};
   dma_flag = 0;
 }
-
-
 
 
 static void W25_Delay(void)
@@ -40,10 +43,9 @@ static void W25_Delay(void)
 void W25_ResetClock(void)
 {
   bufTx[0] = 0;
-  HAL_SPI_TransmitReceive(HSPI, bufTx, bufRx, 1, HAL_MAX_DELAY);
+  HAL_SPI_Transmit(HSPI, bufTx, 1, HAL_MAX_DELAY);
   W25_Delay();
 }
-
 
 
 uint32_t W25_ReadID(void)
@@ -64,13 +66,14 @@ void W25_ReadPage(int n, uint8_t *buf)
   uint32_t address;
 
   address = n * W25_PAGE_SIZE;
-  bufCmd[0] = W25_DATA_READ;
-  bufCmd[1] = (address >> 16) & 0xFF;
-  bufCmd[2] = (address >> 8) & 0xFF;
-  bufCmd[3] = (address >> 0) & 0xFF;
+  bufTx[0] = W25_DATA_READ;
+  bufTx[1] = (address >> 16) & 0xFF;
+  bufTx[2] = (address >> 8) & 0xFF;
+  bufTx[3] = (address >> 0) & 0xFF;
   SPI_ON;
-  HAL_SPI_TransmitReceive(HSPI, bufCmd, bufRx, 4, HAL_MAX_DELAY);
-  HAL_SPI_Receive(HSPI, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
+  HAL_SPI_Transmit(HSPI, bufTx, 4, HAL_MAX_DELAY);
+  HAL_SPI_Receive_DMA(HSPI, buf, W25_PAGE_SIZE);
+  DMA_Wait();
   SPI_OFF;
 }
 
@@ -79,7 +82,7 @@ void W25_WriteEnable(void)
 {
   bufTx[0] = W25_WRITE_ENABLE;
   SPI_ON;
-  HAL_SPI_TransmitReceive(HSPI, bufTx, bufRx, 1, HAL_MAX_DELAY);
+  HAL_SPI_Transmit(HSPI, bufTx, 1, HAL_MAX_DELAY);
   SPI_OFF;
   W25_Delay();
 }
@@ -100,13 +103,13 @@ void W25_WritePage(int pageNum, uint8_t* data, uint16_t size)
 {
 
   uint32_t address = pageNum * W25_PAGE_SIZE;
-  bufCmd[0] = W25_PAGE_PROGRAM;
-  bufCmd[1] = (address >> 16) & 0xFF;
-  bufCmd[2] = (address >> 8) & 0xFF;
-  bufCmd[3] = 0;
+  bufTx[0] = W25_PAGE_PROGRAM;
+  bufTx[1] = (address >> 16) & 0xFF;
+  bufTx[2] = (address >> 8) & 0xFF;
+  bufTx[3] = 0;
 
   SPI_ON;
-  HAL_SPI_TransmitReceive(HSPI, bufCmd, bufRx, 4, HAL_MAX_DELAY);
+  HAL_SPI_Transmit(HSPI, bufTx, 4, HAL_MAX_DELAY);
   HAL_SPI_Transmit_DMA(HSPI, data, size);
   DMA_Wait();
 
@@ -115,13 +118,11 @@ void W25_WritePage(int pageNum, uint8_t* data, uint16_t size)
 }
 
 
-
-
 void W25_ChipErase(void)
 {
-  bufCmd[0] = W25_CHIP_ERASE;
+  bufTx[0] = W25_CHIP_ERASE;
   SPI_ON;
-  HAL_SPI_Transmit(HSPI, bufCmd, 1, HAL_MAX_DELAY);
+  HAL_SPI_Transmit(HSPI, bufTx, 1, HAL_MAX_DELAY);
   SPI_OFF;
   W25_Delay();
 }

@@ -93,26 +93,60 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 
-void Logger_Init(void)
-{
-  W25_ResetClock();
-  // TODO: find first empty page
-  uint8_t buf[W25_PAGE_SIZE];
-  uint8_t pageIsEmpty;
 
-  for (pagePointer = 0; pagePointer < W25_PAGE_COUNT; pagePointer++) {
-    pageIsEmpty = 1;
-    W25_ReadPage(pagePointer, buf);
-    for (int j = 0; j < W25_PAGE_SIZE; j++) {
-      if (buf[j] != 0xFF) {
-        pageIsEmpty = 0;
-        break;
-      }
-    }
-    if (pageIsEmpty) {
+uint8_t Logger_IsPageEmpty(int n)
+{
+  uint8_t buf[W25_PAGE_SIZE];
+  uint8_t res = 1;
+
+  W25_ReadPage(n, buf);
+  for (int j = 0; j < W25_PAGE_SIZE; j++) {
+    if (buf[j] != 0xFF) {
+      res = 0;
       break;
     }
   }
+  return res;
+}
+
+
+int Logger_FindFirstEmptyPage_Linear(void)
+{
+  int p;
+  for (p = 0; p < W25_PAGE_COUNT; p++) {
+    if (Logger_IsPageEmpty(p)) {
+      break;
+    }
+  }
+  return p;
+}
+
+
+int Logger_FindFirstEmptyPage_Binary(void)
+{
+
+  int p = W25_PAGE_COUNT / 2;
+  int dp = p;
+
+  while (dp > 0) {
+    if (Logger_IsPageEmpty(p)) {
+      p -= dp / 2;
+    } else {
+      p += dp / 2;
+    }
+    dp /= 2;
+  }
+  return p;
+}
+
+
+
+void Logger_Init(void)
+{
+  W25_ResetClock();
+  pagePointer = Logger_FindFirstEmptyPage_Linear();
+  asm("nop");
+  pagePointer = Logger_FindFirstEmptyPage_Binary();
 
   HAL_UART_Receive_DMA(&huart1, bufUartRx, W25_PAGE_SIZE*2);
 }
