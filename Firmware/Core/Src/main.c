@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "w25q64.h"
 #include "logger.h"
+#include "led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +47,8 @@ SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_tx;
 DMA_HandleTypeDef hdma_spi1_rx;
 
+TIM_HandleTypeDef htim17;
+
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
 
@@ -59,6 +62,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,20 +103,23 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
 
 
-  while (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {};
-
-
   Logger_Init();
+  LED_Init();
+  LED_SetStatus(IDLE_1);
+  LED_Blink(3);
 
 
   while (1) {
 
-    Logger_Loop();
+    uint8_t res = Logger_Loop();
 
-
+    if (res == 0) LED_SetStatus(IDLE_1);
+    if (res == 1) LED_SetStatus(BUSY);
+    if (res == -1) LED_SetStatus(FULL);
 
 
     if (Logger_KeyPressed()) { // Enter CLI mode
@@ -120,22 +127,32 @@ int main(void)
       Logger_Stop();
 
       LED_Blink(3);
+
       while (!Logger_KeyUnpressed()) {};
 
       while (1) { // CLI infinite loop
 
-        uint8_t cmd;
-        HAL_UART_Receive(&huart1, &cmd, 1, 100);
+        uint8_t cmd = 0;
+
+        HAL_UART_Receive(&huart1, &cmd, 1, 50);
         if (cmd == '1') {
-          Logger_Dump(1000);
+          LED_SetStatus(BUSY);
+          Logger_Dump(4000);
         }
         if (cmd == '2') {
+          LED_SetStatus(BUSY);
           Logger_Dump(W25_PAGE_COUNT);
         }
+        if (cmd == 'S') {
+          Logger_SendStats();
+        }
+
+        LED_SetStatus(IDLE_2);
 
         if (Logger_KeyPressed()) {
+          LED_SetStatus(FULL);
           Logger_Erase();
-          while (1);
+          NVIC_SystemReset();
         }
       }
     }
@@ -234,6 +251,38 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
+  /* USER CODE BEGIN TIM17_Init 0 */
+
+  /* USER CODE END TIM17_Init 0 */
+
+  /* USER CODE BEGIN TIM17_Init 1 */
+
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 48;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 10000;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM17_Init 2 */
+
+  /* USER CODE END TIM17_Init 2 */
 
 }
 

@@ -15,9 +15,14 @@ port = '/dev/cu.usbserial-A50285BI'
 
 with serial.Serial(port, 1500000, timeout=100) as ser:
 
+    ser.write(b'S')
+    d = ser.readline().decode()
+    print(d)
+    
     ser.write(b'1')
-    d = ser.read(1000*256)
+    d = ser.read(4000*256)
     b = np.frombuffer(d, dtype='uint8')
+        
 
 with open('output.bin', 'wb') as f:
     f.write(d)

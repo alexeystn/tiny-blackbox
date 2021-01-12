@@ -108,6 +108,9 @@ void W25_WritePage(int pageNum, uint8_t* data, uint16_t size)
   bufTx[2] = (address >> 8) & 0xFF;
   bufTx[3] = 0;
 
+  if (pageNum >= W25_PAGE_COUNT)
+    return;
+
   SPI_ON;
   HAL_SPI_Transmit(HSPI, bufTx, 4, HAL_MAX_DELAY);
   HAL_SPI_Transmit_DMA(HSPI, data, size);

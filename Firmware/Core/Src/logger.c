@@ -1,6 +1,6 @@
 #include "main.h"
 #include "w25q64.h"
-
+#include <stdio.h>
 
 #define KEY_PRESSED_TIME    2000
 #define KEY_UNPRESSED_TIME  100
@@ -32,33 +32,14 @@ uint8_t Logger_KeyUnpressed(void)
 }
 
 
-
-
-
-
-void LED_Blink(uint8_t n)
-{
-  for (int i = 0; i < n; i++) {
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-    HAL_Delay(100);
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-    HAL_Delay(100);
-  }
-}
-
-
-
-
-
 void Logger_Erase(void)
 {
   W25_WriteEnable();
   W25_ChipErase();
   while (W25_GetStatus()) {
-    LED_Blink(1);
+    HAL_Delay(100);
   }
 }
-
 
 
 void Logger_Dump(int n)
@@ -72,8 +53,6 @@ void Logger_Dump(int n)
 }
 
 
-
-
 uint8_t bufUartRx[W25_PAGE_SIZE*2];
 int pagePointer = 0;
 
@@ -82,14 +61,14 @@ volatile uint8_t irq_flag = 0;
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
 {
   irq_flag = 1;
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 }
 
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   irq_flag = 2;
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 }
 
 
@@ -155,30 +134,44 @@ void Logger_Init(void)
 }
 
 
-void Logger_Loop(void)
+int Logger_Loop(void)
 {
-  uint8_t res = 0;
+  int result = 0;
+  static int prevRxTime = 0;
+  int currTime = HAL_GetTick();
+
+  uint8_t r = 0;
   static uint8_t *pointer;
 
-  res = irq_flag;
-  if (!res) {
-    return;
-  }
-  irq_flag = 0;
+  r = irq_flag;
 
-  if (res == 1) { // half
-    pointer = &bufUartRx[0];
-  }
-  if (res == 2) { // full
-    pointer = &bufUartRx[W25_PAGE_SIZE];
-  }
+  if (r) {
+    prevRxTime = currTime;
 
-  W25_WriteEnable();
-  W25_WritePage(pagePointer, pointer, W25_PAGE_SIZE);
-  while (W25_GetStatus()) {};
+    irq_flag = 0;
 
-  pagePointer++;
-  // TODO: check if memory full
+    if (r == 1) { // half
+      pointer = &bufUartRx[0];
+    }
+    if (r == 2) { // full
+      pointer = &bufUartRx[W25_PAGE_SIZE];
+    }
+
+    W25_WriteEnable();
+    W25_WritePage(pagePointer, pointer, W25_PAGE_SIZE);
+    while (W25_GetStatus()) {};
+
+    pagePointer++;
+
+  }
+  if ((currTime - prevRxTime) < 100)
+    result = 1;
+  else
+    result = 0;
+  if (pagePointer >= W25_PAGE_COUNT)
+    result = -1;
+
+  return result;
 }
 
 
@@ -190,6 +183,13 @@ void Logger_Stop(void)
 }
 
 
+void Logger_SendStats(void)
+{
+  char str[100];
+  int d = (1000 * pagePointer)/W25_PAGE_COUNT;
+  sprintf(str, "Flash memory: %d.%d%% full\n", d/10, d%10 );
+  HAL_UART_Transmit(HUART, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+}
 
 
 
