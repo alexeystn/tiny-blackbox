@@ -106,27 +106,22 @@ int main(void)
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
 
-
   Logger_Init();
   LED_Init();
-  LED_SetStatus(IDLE_1);
   LED_Blink(3);
-
+  LED_SetStatus(ST_IDLE_WRITE);
 
   while (1) {
 
-    uint8_t res = Logger_Loop();
-
-    if (res == 0) LED_SetStatus(IDLE_1);
-    if (res == 1) LED_SetStatus(BUSY);
-    if (res == -1) LED_SetStatus(FULL);
-
+    enum status_t st;
+    st = Logger_Loop();
+    LED_SetStatus(st);
 
     if (Logger_KeyPressed()) { // Enter CLI mode
 
       Logger_Stop();
-
       LED_Blink(3);
+      LED_SetStatus(ST_IDLE_READ);
 
       while (!Logger_KeyUnpressed()) {};
 
@@ -135,25 +130,25 @@ int main(void)
         uint8_t cmd = 0;
 
         HAL_UART_Receive(&huart1, &cmd, 1, 50);
-        if (cmd == '1') {
-          LED_SetStatus(BUSY);
+
+        if (cmd == 'p') {
+          LED_SetStatus(ST_BUSY);
           Logger_Dump(4000);
         }
-        if (cmd == '2') {
-          LED_SetStatus(BUSY);
+        if (cmd == 'd') {
+          LED_SetStatus(ST_BUSY);
           Logger_Dump(W25_PAGE_COUNT);
         }
-        if (cmd == 'S') {
+        if (cmd == 's') {
           Logger_SendStats();
         }
 
-        LED_SetStatus(IDLE_2);
-
-        if (Logger_KeyPressed()) {
-          LED_SetStatus(FULL);
+        if ((Logger_KeyPressed()) || (cmd == 'e')) {
+          LED_SetStatus(ST_BUSY);
           Logger_Erase();
           NVIC_SystemReset();
         }
+        LED_SetStatus(ST_IDLE_READ);
       }
     }
   }

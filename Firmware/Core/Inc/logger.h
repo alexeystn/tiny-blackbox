@@ -3,17 +3,13 @@
 #define LOGGER_H
 
 void Logger_Init(void);
-int Logger_Loop(void);
+enum status_t Logger_Loop(void);
 void Logger_Stop(void);
+void Logger_Dump(int numPages);
+void Logger_SendStats(void);
+void Logger_Erase(void);
 
 uint8_t Logger_KeyPressed(void);
 uint8_t Logger_KeyUnpressed(void);
-
-void Logger_Erase(void);
-void LED_Blink(uint8_t n);
-
-void Logger_Dump(int numPages);
-void Logger_SendStats(void);
-
 
 #endif

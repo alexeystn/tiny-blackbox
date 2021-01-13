@@ -10,25 +10,24 @@
 static uint8_t bufTx[4];
 static uint8_t bufRx[4];
 
-
-uint8_t dma_flag = 0;
+volatile uint8_t dmaFlagSPI = 0;
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  dma_flag = 1;
+  dmaFlagSPI = 1;
 }
 
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  dma_flag = 1;
+  dmaFlagSPI = 1;
 }
 
 
 static void DMA_Wait()
 {
-  while (!dma_flag) {};
-  dma_flag = 0;
+  while (!dmaFlagSPI) {};
+  dmaFlagSPI = 0;
 }
 
 
@@ -64,7 +63,6 @@ uint32_t W25_ReadID(void)
 void W25_ReadPage(int n, uint8_t *buf)
 {
   uint32_t address;
-
   address = n * W25_PAGE_SIZE;
   bufTx[0] = W25_DATA_READ;
   bufTx[1] = (address >> 16) & 0xFF;
@@ -101,21 +99,15 @@ uint8_t W25_GetStatus(void)
 
 void W25_WritePage(int pageNum, uint8_t* data, uint16_t size)
 {
-
   uint32_t address = pageNum * W25_PAGE_SIZE;
   bufTx[0] = W25_PAGE_PROGRAM;
   bufTx[1] = (address >> 16) & 0xFF;
   bufTx[2] = (address >> 8) & 0xFF;
   bufTx[3] = 0;
-
-  if (pageNum >= W25_PAGE_COUNT)
-    return;
-
   SPI_ON;
   HAL_SPI_Transmit(HSPI, bufTx, 4, HAL_MAX_DELAY);
   HAL_SPI_Transmit_DMA(HSPI, data, size);
   DMA_Wait();
-
   SPI_OFF;
   W25_Delay();
 }
@@ -129,16 +121,3 @@ void W25_ChipErase(void)
   SPI_OFF;
   W25_Delay();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -13,17 +13,27 @@ def find_com_port():
 
 port = '/dev/cu.usbserial-A50285BI'
 
-with serial.Serial(port, 1500000, timeout=100) as ser:
+with serial.Serial(port, 1500000, timeout=1) as ser, open('output.bin', 'wb') as f:
 
-    ser.write(b'S')
+    ser.write(b's')
     d = ser.readline().decode()
     print(d)
     
-    ser.write(b'1')
-    d = ser.read(4000*256)
-    b = np.frombuffer(d, dtype='uint8')
+    ser.write(b'd')  # [p] or [d]
+    
+    while True:
+        d = ser.read(1000)
+        if len(d) > 0:
+            f.write(d)
+        else:
+            break
+        
+    
+
+        
+        
+    #b = np.frombuffer(d, dtype='uint8')
         
 
-with open('output.bin', 'wb') as f:
-    f.write(d)
+    
 

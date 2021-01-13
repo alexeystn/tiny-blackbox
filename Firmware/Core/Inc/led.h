@@ -3,10 +3,10 @@
 #define LED_H
 
 enum status_t {
-  IDLE_1,
-  IDLE_2,
-  BUSY,
-  FULL
+  ST_IDLE_WRITE,
+  ST_IDLE_READ,
+  ST_BUSY,
+  ST_FULL
 };
 
 #define LED_OFF   LED_GPIO_Port->BRR = LED_Pin
@@ -17,8 +17,4 @@ void LED_SetStatus(enum status_t status);
 void LED_Handle(void);
 void LED_Blink(uint8_t n);
 
-
 #endif
-
-
-
