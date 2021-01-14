@@ -86,3 +86,14 @@ void LED_Blink(uint8_t n)
   HAL_Delay(100);
   ledStatusEnabled = true;
 }
+
+
+void LED_BlinkShort(void)
+{
+  ledStatusEnabled = false;
+  LED_ON;
+  HAL_Delay(1);
+  LED_OFF;
+  HAL_Delay(20);
+  ledStatusEnabled = true;
+}

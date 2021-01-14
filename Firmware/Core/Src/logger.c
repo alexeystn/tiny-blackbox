@@ -169,6 +169,7 @@ uint8_t Logger_KeyPressed(void)
 {
   int endTime = HAL_GetTick() + KEY_PRESSED_TIME;
   while (!HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {
+    LED_BlinkShort();
     if (HAL_GetTick() > endTime)
       return 1;
   }

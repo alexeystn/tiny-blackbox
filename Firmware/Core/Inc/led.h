@@ -16,5 +16,6 @@ void LED_Init(void);
 void LED_SetStatus(enum status_t status);
 void LED_Handle(void);
 void LED_Blink(uint8_t n);
+void LED_BlinkShort(void);
 
 #endif
