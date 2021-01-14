@@ -8,6 +8,7 @@ void Logger_Stop(void);
 void Logger_Dump(int numPages);
 void Logger_SendStats(void);
 void Logger_Erase(void);
+bool Logger_IsMemoryFull(void);
 
 uint8_t Logger_KeyPressed(void);
 uint8_t Logger_KeyUnpressed(void);

@@ -1,5 +1,5 @@
+#include <w25q.h>
 #include "main.h"
-#include "w25q64.h"
 #include "led.h"
 
 #define KEY_PRESSED_TIME    2000
@@ -133,8 +133,6 @@ enum status_t Logger_Loop(void)
       W25_WriteEnable();
       W25_WritePage(pageCounter, bufPointer, W25_PAGE_SIZE);
       while (W25_GetStatus()) {};
-    } else {
-      return ST_FULL;
     }
     pageCounter++;
   }
@@ -149,6 +147,12 @@ enum status_t Logger_Loop(void)
 void Logger_Stop(void)
 {
   HAL_UART_AbortReceive(HUART);
+}
+
+
+bool Logger_IsMemoryFull(void)
+{
+  return (pageCounter >= W25_PAGE_COUNT);
 }
 
 

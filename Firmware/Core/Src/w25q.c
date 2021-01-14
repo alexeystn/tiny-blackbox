@@ -1,5 +1,5 @@
+#include <w25q.h>
 #include "main.h"
-#include "w25q64.h"
 
 
 #define SPI_ON   SPI1_NSS_GPIO_Port->BRR = SPI1_NSS_Pin

@@ -1,10 +1,10 @@
 #include "main.h"
-#ifndef W25Q64_H
-#define W25Q64_H
+#ifndef W25Q128_H
+#define W25Q128_H
 
 
 #define W25_PAGE_SIZE      256
-#define W25_PAGE_COUNT     32768
+#define W25_PAGE_COUNT     65536 // Q64 - 32768, Q128 - 65536
 
 
 #define W25_WRITE_ENABLE  0x06 // bit must be set prior to every write/erase instruction

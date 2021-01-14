@@ -19,11 +19,11 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include "w25q.h"
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "w25q64.h"
 #include "logger.h"
 #include "led.h"
 /* USER CODE END Includes */
@@ -115,6 +115,9 @@ int main(void)
 
     enum status_t st;
     st = Logger_Loop();
+    if (Logger_IsMemoryFull()) {
+      st = ST_FULL;
+    }
     LED_SetStatus(st);
 
     if (Logger_KeyPressed()) { // Enter CLI mode
