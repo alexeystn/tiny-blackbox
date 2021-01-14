@@ -19,11 +19,11 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "w25q.h"
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "w25q.h"
 #include "logger.h"
 #include "led.h"
 /* USER CODE END Includes */
@@ -79,7 +79,7 @@ static void MX_TIM17_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  enum status_t st;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -108,53 +108,39 @@ int main(void)
 
   Logger_Init();
   LED_Init();
-  LED_Blink(3);
   LED_SetStatus(ST_IDLE_WRITE);
 
   while (1) {
 
-    enum status_t st;
-    st = Logger_Loop();
+    st = Logger_WriteLoop();
     if (Logger_IsMemoryFull()) {
       st = ST_FULL;
     }
     LED_SetStatus(st);
 
-    if (Logger_KeyPressed()) { // Enter CLI mode
-
-      Logger_Stop();
-      LED_Blink(3);
-      LED_SetStatus(ST_IDLE_READ);
-
-      while (!Logger_KeyUnpressed()) {};
-
-      while (1) { // CLI infinite loop
-
-        uint8_t cmd = 0;
-
-        HAL_UART_Receive(&huart1, &cmd, 1, 50);
-
-        if (cmd == 'p') {
-          LED_SetStatus(ST_BUSY);
-          Logger_Dump(4000);
-        }
-        if (cmd == 'd') {
-          LED_SetStatus(ST_BUSY);
-          Logger_Dump(W25_PAGE_COUNT);
-        }
-        if (cmd == 's') {
-          Logger_SendStats();
-        }
-
-        if ((Logger_KeyPressed()) || (cmd == 'e')) {
-          LED_SetStatus(ST_BUSY);
-          Logger_Erase();
-          NVIC_SystemReset();
-        }
-        LED_SetStatus(ST_IDLE_READ);
-      }
+    if (Logger_KeyPressed()) {
+      break;
     }
   }
+
+  Logger_Stop();
+  LED_SetStatus(ST_IDLE_READ);
+  LED_Blink(3);
+  while (!Logger_KeyUnpressed()) {};
+  Logger_SendStats();
+
+  while (1) {
+
+    Logger_ReadLoop();
+
+    if (Logger_KeyPressed()) {
+      break;
+    }
+  }
+
+  LED_SetStatus(ST_BUSY);
+  Logger_Erase();
+  NVIC_SystemReset();
 
   /* USER CODE END 2 */
 

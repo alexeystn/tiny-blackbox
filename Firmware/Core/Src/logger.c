@@ -3,7 +3,7 @@
 #include "led.h"
 
 #define KEY_PRESSED_TIME    2000
-#define KEY_UNPRESSED_TIME  100
+#define KEY_UNPRESSED_TIME  200
 
 #define HUART    &huart1
 
@@ -41,6 +41,40 @@ void Logger_Dump(int n)
   for (int i = 0; i < n; i++) {
     W25_ReadPage(i, buf);
     HAL_UART_Transmit(HUART, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
+  }
+}
+
+
+static bool Logger_IsBufferEmpty(uint8_t *buf, int size)
+{
+  bool result = true;
+  for (int i = 0; i < size; i++) {
+    if (buf[i] != 0xFF) {
+      result = false;
+      break;
+    }
+  }
+  return result;
+}
+
+
+enum status_t Logger_ReadLoop(void)
+{
+  static int readPageCounter = 0;
+  uint8_t buf[W25_PAGE_SIZE];
+
+  if (readPageCounter < W25_PAGE_COUNT) {
+
+    W25_ReadPage(readPageCounter, buf);
+    if (Logger_IsBufferEmpty(buf, W25_PAGE_SIZE)) {
+      readPageCounter = W25_PAGE_COUNT;
+      return ST_IDLE_READ;
+    }
+    HAL_UART_Transmit(HUART, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
+    readPageCounter++;
+    return ST_BUSY;
+  } else {
+    return ST_IDLE_READ;
   }
 }
 
@@ -110,7 +144,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 
-enum status_t Logger_Loop(void)
+enum status_t Logger_WriteLoop(void)
 {
   static int prevRxTime = 0;
   static uint8_t *bufPointer;
