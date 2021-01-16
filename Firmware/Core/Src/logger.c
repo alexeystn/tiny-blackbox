@@ -1,6 +1,7 @@
-#include <w25q.h>
+#include "logger.h"
 #include "main.h"
 #include "led.h"
+#include "w25q.h"
 
 #define KEY_PRESSED_TIME    2000
 #define KEY_UNPRESSED_TIME  200
@@ -22,15 +23,11 @@ int pageCounter = 0;
 
 void Logger_Erase(void)
 {
-  const char str1[] = "Erasing memory...\n";
-  const char str2[] = "Done. Reboot...\n";
-  HAL_UART_Transmit(HUART, (uint8_t*)str1, strlen(str1), HAL_MAX_DELAY);
   W25_WriteEnable();
   W25_ChipErase();
   while (W25_GetStatus()) {
     HAL_Delay(100);
   }
-  HAL_UART_Transmit(HUART, (uint8_t*)str2, strlen(str2), HAL_MAX_DELAY);
 }
 
 
@@ -45,19 +42,6 @@ void Logger_Dump(int n)
 }
 
 
-static bool Logger_IsBufferEmpty(uint8_t *buf, int size)
-{
-  bool result = true;
-  for (int i = 0; i < size; i++) {
-    if (buf[i] != 0xFF) {
-      result = false;
-      break;
-    }
-  }
-  return result;
-}
-
-
 enum status_t Logger_ReadLoop(void)
 {
   static int readPageCounter = 0;
@@ -66,10 +50,6 @@ enum status_t Logger_ReadLoop(void)
   if (readPageCounter < W25_PAGE_COUNT) {
 
     W25_ReadPage(readPageCounter, buf);
-    if (Logger_IsBufferEmpty(buf, W25_PAGE_SIZE)) {
-      readPageCounter = W25_PAGE_COUNT;
-      return ST_IDLE_READ;
-    }
     HAL_UART_Transmit(HUART, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
     readPageCounter++;
     return ST_BUSY;
@@ -124,8 +104,16 @@ int Logger_FindFirstEmptyPage(void)
 }
 
 
+static void Logger_SetUartBaudRate(int baudrate)
+{
+  (*HUART).Init.BaudRate = baudrate;
+  HAL_UART_Init(HUART);
+}
+
+
 void Logger_Init(void)
 {
+  Logger_SetUartBaudRate(UART_BAUDRATE_WRITE);
   W25_ResetClock();
   pageCounter = Logger_FindFirstEmptyPage();
   HAL_UART_Receive_DMA(&huart1, bufUartRx, W25_PAGE_SIZE*2);
@@ -181,6 +169,7 @@ enum status_t Logger_WriteLoop(void)
 void Logger_Stop(void)
 {
   HAL_UART_AbortReceive(HUART);
+  Logger_SetUartBaudRate(UART_BAUDRATE_READ);
 }
 
 
@@ -192,10 +181,10 @@ bool Logger_IsMemoryFull(void)
 
 void Logger_SendStats(void)
 {
-  char str[100];
-  int d = (1000 * pageCounter)/W25_PAGE_COUNT;
-  sprintf(str, "Flash memory: %d.%d%% full\n", d/10, d%10 ); // @suppress("Float formatting support")
-  HAL_UART_Transmit(HUART, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+  int d[2];
+  d[0] = 0xAABBCCDD;
+  d[1] = (1000 * pageCounter)/W25_PAGE_COUNT;
+  HAL_UART_Transmit(HUART, (uint8_t*)d, sizeof(d), HAL_MAX_DELAY);
 }
 
 
