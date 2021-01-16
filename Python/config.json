@@ -1,0 +1,6 @@
+{
+  "port": "/dev/cu.usbmodemFD14121",
+  "baudrate": "500000",
+  "use_passthrough": 1,
+  "bf_uart_number": 4
+}
