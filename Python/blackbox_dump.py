@@ -36,7 +36,7 @@ def check_header(header):
         print()
         print('Flash memory: {0:.1f}% full'.format(v/10))
     else:
-        'Incorrect device header.'
+        print('Incorrect device header')
 
 
 #port = '/dev/cu.usbserial-A50285BI'
@@ -46,7 +46,7 @@ def check_header(header):
 
 config = load_config()
     
-filename = datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
+filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
 result = 0
 
 with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser, open(filename, 'wb') as f:
@@ -82,6 +82,7 @@ with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser, open(f
         h = ser.read(8)
         wait_counter += 1
         if len(h) > 0:
+            print()
             check_header(h)               
             break
   
@@ -90,8 +91,6 @@ with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser, open(f
         print('Serial port timeout')
     else:
         print('Downloading:')
-        
-    else:
         
         rx_counter = 0
         rx_counter_scaled = 0
