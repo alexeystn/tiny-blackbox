@@ -21,15 +21,15 @@ Tiny Blackbox is an open source external ultra-light logger for micro drones.
 
 ## Operating modes
 |Mode| Action  | Description | LED|
-| --- | :---: | --- | --- |
-|Write| Default on Power-up           | Write RX data to flash at 1.5 Mbit/s | Single slow blink - no data <br/>Fast blink - recording|
-|Read | Long 1s button press          | Dump all flash content at 500 kbit/s |  Double slow blink<br/>|
-|Erase| One more long 3s button press | Erase memory    |  Fast blink<br/> |
+|:---:|:---:|:---:|:---:|
+|Write| Default on Power-up           | Write RX data to flash at 1.5 Mbit/s | Single slow blink - no data <br/>Fast blink - recording<br/>Fast triple blink - memory full|
+|Read | Long 1s button press          | Dump all flash content at 500 kbit/s |  <br/> Double slow blink<br/> <br/> |
+|Erase| One more long 3s button press | Erase memory    |  <br/> Fast blink<br/><br/> |
 
 ## Read recorded logs
 1) Configure `bf_uart_number` number in `config.json` to match blackbox port number in Betaflight.
-2) Connect flight controller to PC.
-3) Run Python script `blackbox_dump.py`. You may need to install `pyserial` module before. The script automatically switches your flight controller into _Serial Passthrough_ mode.
-4) Hold button for 1 second to switch device into Read mode.
+2) Connect the flight controller to PC.
+3) Run Python script `blackbox_dump.py`. You may need to install `pyserial` module before. The script automatically turns your flight controller into _Serial Passthrough_ mode.
+4) Hold button for 1 second to switch into Read mode.
 5) Wait until all blackbox data is saved to file.
 6) Open file with Blackbox Explorer and enjoy :-)
