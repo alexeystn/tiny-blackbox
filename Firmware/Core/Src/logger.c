@@ -3,9 +3,6 @@
 #include "led.h"
 #include "w25q.h"
 
-#define KEY_PRESSED_TIME    2000
-#define KEY_UNPRESSED_TIME  200
-
 #define HUART    &huart1
 
 
@@ -188,9 +185,9 @@ void Logger_SendStats(void)
 }
 
 
-uint8_t Logger_KeyPressed(void)
+uint8_t Logger_KeyPressed(int delayMs)
 {
-  int endTime = HAL_GetTick() + KEY_PRESSED_TIME;
+  int endTime = HAL_GetTick() + delayMs;
   while (!HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {
     LED_BlinkShort();
     if (HAL_GetTick() > endTime)
@@ -200,9 +197,9 @@ uint8_t Logger_KeyPressed(void)
 }
 
 
-uint8_t Logger_KeyUnpressed(void)
+uint8_t Logger_KeyUnpressed(int delayMs)
 {
-  int endTime = HAL_GetTick() + KEY_UNPRESSED_TIME;
+  int endTime = HAL_GetTick() + delayMs;
   while (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {
     if (HAL_GetTick() > endTime)
       return 1;

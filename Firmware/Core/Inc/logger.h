@@ -14,7 +14,7 @@ void Logger_SendStats(void);
 void Logger_Erase(void);
 bool Logger_IsMemoryFull(void);
 
-uint8_t Logger_KeyPressed(void);
-uint8_t Logger_KeyUnpressed(void);
+uint8_t Logger_KeyPressed(int delayMs);
+uint8_t Logger_KeyUnpressed(int delayMs);
 
 #endif

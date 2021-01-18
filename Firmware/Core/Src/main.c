@@ -118,7 +118,7 @@ int main(void)
     }
     LED_SetStatus(st);
 
-    if (Logger_KeyPressed()) {
+    if (Logger_KeyPressed(1000)) {
       break;
     }
   }
@@ -126,14 +126,14 @@ int main(void)
   Logger_Stop();
   LED_SetStatus(ST_IDLE_READ);
   LED_Blink(3);
-  while (!Logger_KeyUnpressed()) {};
+  while (!Logger_KeyUnpressed(200)) {};
   Logger_SendStats();
 
   while (1) {
 
     Logger_ReadLoop();
 
-    if (Logger_KeyPressed()) {
+    if (Logger_KeyPressed(3000)) {
       break;
     }
   }
