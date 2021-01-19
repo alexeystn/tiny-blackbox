@@ -1,4 +1,4 @@
-Deisgnator   Value            Package
+Designator   Value            Package
 R1           3.3k             0603
 R2,R3        10k              0603
 C1,C4        4.7uF X5R        0603
