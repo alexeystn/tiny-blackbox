@@ -1,0 +1,12 @@
+Deisgnator   Value            Package
+R1           3.3k             0603
+R2,R3        10k              0603
+C1,C4        4.7uF X5R        0603
+C2,C3,C7     100nF X7R        0603
+C5,C6        22pF NPO         0603
+LD1          Green LED        0805
+B1           B3U-3000P        1.2 × 3 × 2.5 mm
+X1           NX3225GD-8MHz    2-lead, 3.2 × 2.5 mm
+U1           LP2985-33DBVR    SOT-23-5
+U2           STM32F042G6U6    UFQFPN28, 4 × 4 mm
+U3           W25Q128JVPIQ     WSON-8, 5 × 6 mm
