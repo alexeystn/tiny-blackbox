@@ -3,6 +3,7 @@ import serial.tools.list_ports
 import time
 from datetime import datetime
 import json
+import sys
 
 
 def load_config():
@@ -19,7 +20,8 @@ def load_config():
         for i, p in enumerate(port_list):
             print('{0}: {1}'.format(i+1, p))
         n = int(input())
-    config['port'] = port_list[n-1]
+        config['port'] = port_list[n-1]
+
     return config
 
 
@@ -35,44 +37,80 @@ def check_header(header):
         v = int.from_bytes(header[4:8], 'little')
         print()
         print('Flash memory: {0:.1f}% full'.format(v/10))
+        print()
     else:
         print('Incorrect device header')
+        print()
 
 
-#port = '/dev/cu.usbserial-A50285BI'
-#port = '/dev/cu.usbmodemFD14121'
-#port = '/dev/cu.usbmodemFD131'
+def bf_enable_passthrough(ser, config):
+    
+    print()
+    print('===== Betafligh CLI mode =====')
+            
+    ser.write(b'#\n')
+    res = ser.readline()
+
+    request_str = 'serialpassthrough ' + str(config['bf_uart_number'] - 1) + ' ' + str(config['baudrate']) + '\n'
+
+    ser.write(request_str.encode())
+    while (1):
+        res = ser.readline()
+        if len(res) == 0:
+            break
+        s = res.decode().strip()
+        if (len(s) > 0):
+            print(' >> ' + s)
+            
+    print('==============================')
+    print()
+
+
+def save_rx_data_to_file(ser, f):
+    
+    rx_counter = 0
+    rx_counter_scaled = 0
+    rx_counter_scaled_prev = 0
+
+    try:
+        while True: # print dots and megabytes
+            d = ser.read(1000)
+            if len(d) > 0:
+                rx_counter += len(d)
+                f.write(d)
+                rx_counter_scaled = rx_counter // (2**16)
+                if (rx_counter_scaled > rx_counter_scaled_prev):
+                    print('.', end='')
+                    f.flush()
+                    if (rx_counter_scaled % 16 == 0):
+                        print(' {0:.0f} Mb'.format(rx_counter/(2**20)))
+                rx_counter_scaled_prev = rx_counter_scaled
+                
+            else:
+                break
+    except KeyboardInterrupt:
+        print()
+        print('cancelled')
+
+    print('\n'+str(rx_counter) + ' bytes recieved')
+    print(filename + ' saved')    
+
 
 
 config = load_config()
     
 filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
+f = open(filename, 'wb')
+
 result = 0
 
-with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser, open(filename, 'wb') as f:
+with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser:
 
     result = 1
     print('Open ' + config['port'] + ' successfully')
 
     if config['use_passthrough'] != 0:
-            print()
-            print('=== Enter Betafligh CLI mode ===')
-            
-            ser.write(b'#\n')
-            res = ser.readline()
-
-            ser.write(('serialpassthrough ' + str(config['bf_uart_number'] - 1) + ' ' +
-                       str(config['baudrate']) + '\n').encode())
-            while (1):
-                res = ser.readline()
-                if len(res) == 0:
-                    break
-                s = res.decode()[:-2]
-                if (len(s) > 0):
-                    print(' >> ' + s)
-            
-            print('=== Exit Betafligh CLI mode ===')
-            print()
+        bf_enable_passthrough(ser, config)
 
     print('Hold button for 2 seconds', end='')
     
@@ -90,29 +128,9 @@ with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser, open(f
         print()
         print('Serial port timeout')
     else:
-        print('Downloading:')
-        
-        rx_counter = 0
-        rx_counter_scaled = 0
-        rx_counter_scaled_prev = 0
-        
-        while True: # print dots and megabytes
-            d = ser.read(1000)
-            if len(d) > 0:
-                rx_counter += len(d)
-                f.write(d)
-                rx_counter_scaled = rx_counter // (2**16)
-                if (rx_counter_scaled > rx_counter_scaled_prev):
-                    print('.', end='')
-                    f.flush()
-                    if (rx_counter_scaled % 16 == 0):
-                        print(' {0:.0f} Mb'.format(rx_counter/(2**20)))
-                rx_counter_scaled_prev = rx_counter_scaled
-                
-            else:
-                break
-        print('\n'+str(rx_counter) + ' bytes recieved')
-        print(filename + ' saved')
+        print('Downloading:      Press ctrl+c to stop')
+        save_rx_data_to_file(ser, f)
+
     
 if result == 0:
     print('Cannot open ' + port)
