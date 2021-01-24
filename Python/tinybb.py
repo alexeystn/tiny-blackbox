@@ -31,18 +31,6 @@ def save_config(config):
         json.dump(config, f, indent=2)  
 
 
-def check_header(header):
-
-    if header[0:4] == b'\xdd\xcc\xbb\xaa':
-        v = int.from_bytes(header[4:8], 'little')
-        print()
-        print('Flash memory: {0:.1f}% full'.format(v/10))
-        print()
-    else:
-        print('Incorrect device header')
-        print()
-
-
 def bf_enable_passthrough(ser, config):
     
     print()
@@ -72,6 +60,9 @@ def save_rx_data_to_file(ser, f):
     rx_counter_scaled = 0
     rx_counter_scaled_prev = 0
 
+    print('Downloading:')
+    print('Press ctrl+c to stop')
+
     try:
         while True: # print dots and megabytes
             d = ser.read(1000)
@@ -80,7 +71,7 @@ def save_rx_data_to_file(ser, f):
                 f.write(d)
                 rx_counter_scaled = rx_counter // (2**16)
                 if (rx_counter_scaled > rx_counter_scaled_prev):
-                    print('.', end='')
+                    print('.', end='', flush=True)
                     f.flush()
                     if (rx_counter_scaled % 16 == 0):
                         print(' {0:.0f} Mb'.format(rx_counter/(2**20)))
@@ -96,9 +87,63 @@ def save_rx_data_to_file(ser, f):
     print(filename + ' saved')    
 
 
+def process_args():
+    args = sys.argv
+    if len(args) > 1:
+        arg = args[1]
+        if (len(arg) == 2) and (arg.startswith('-')):
+            return arg[1]
+    else:
+        return None
+
+
+def func_information(ser):
+    
+    ser.flushInput()
+    ser.write('\n'.encode())
+    time.sleep(0.1)
+    ser.write('info\n'.encode())
+    resp = ser.readline()
+    if len(resp) > 0:
+        print(resp.decode().strip())
+    else:
+        print('No responce from Blackbox')
+
+
+def func_read(ser):
+    ser.write('read\n'.encode())
+    save_rx_data_to_file(ser, f)
+
+
+def func_dump(ser):
+    ser.write('dump\n'.encode())
+    save_rx_data_to_file(ser, f)
+
+
+def func_erase(ser):
+    print('Erasing (~30 sec)')
+    ser.write('erase\n'.encode())
+
+
+def func_exit(ser):
+    return
+
+
+commands = dict({'i':['Information', func_information],
+                 'r':['Read memory', func_read],
+                 'd':['Dump full memory', func_dump],
+                 'e':['Erase', func_erase],
+                 'x':['Exit', func_exit] })
+
 
 config = load_config()
-    
+
+arg = process_args()
+
+if arg and not arg in commands:
+    print('Wrong command line argument')
+    sys.exit()
+
 filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
 f = open(filename, 'wb')
 
@@ -111,30 +156,35 @@ with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser:
 
     if config['use_passthrough'] != 0:
         bf_enable_passthrough(ser, config)
-
-    print('Hold button for 2 seconds', end='')
     
-    wait_counter = 0
-    while wait_counter < 60:
-        print('.', end='')
-        h = ser.read(8)
-        wait_counter += 1
-        if len(h) > 0:
-            print()
-            check_header(h)               
-            break
-  
-    if len(h) == 0:      
-        print()
-        print('Serial port timeout')
+    func_information(ser)
+    print()
+
+    if arg:
+        commands[arg][1](ser)
+        
     else:
-        print('Downloading:      Press ctrl+c to stop')
-        save_rx_data_to_file(ser, f)
+        for k in commands: print(k + ' - ' + commands[k][0])
+        print()
+        print('Enter command: ')
+    
+        while True:
+
+            c = None
+            
+            if not c in commands:
+                print('> ', end='')
+                c = input()
+            commands[c][1](ser)
+            
+            if c == 'x':
+                break
 
     
 if result == 0:
     print('Cannot open ' + port)
 else:
     save_config(config)
-    
+
+print()
 

@@ -2,8 +2,7 @@
 #include "main.h"
 #include "led.h"
 #include "w25q.h"
-
-#define HUART    &huart1
+#include "defines.h"
 
 
 enum dmaFlagUART_t {
@@ -25,12 +24,21 @@ void Logger_Erase(void)
   while (W25_GetStatus()) {
     HAL_Delay(100);
   }
+  pageCounter = 0;
 }
 
 
-void Logger_Dump(int n)
+void Logger_Read(bool readFullMemory)
 {
   uint8_t buf[W25_PAGE_SIZE];
+  char str[100];
+  int n;
+
+  if (readFullMemory) {
+    n = W25_PAGE_COUNT;
+  } else {
+    n = pageCounter;
+  }
 
   for (int i = 0; i < n; i++) {
     W25_ReadPage(i, buf);
@@ -176,12 +184,12 @@ bool Logger_IsMemoryFull(void)
 }
 
 
-void Logger_SendStats(void)
+void Logger_SendInfo(void)
 {
-  int d[2];
-  d[0] = 0xAABBCCDD;
-  d[1] = (1000 * pageCounter)/W25_PAGE_COUNT;
-  HAL_UART_Transmit(HUART, (uint8_t*)d, sizeof(d), HAL_MAX_DELAY);
+  char str[100];
+  int d = (1000 * pageCounter)/W25_PAGE_COUNT;
+  sprintf(str, "Flash memory: %d.%d%% full\n", d/10, d%10 ); // @suppress("Float formatting support")
+  HAL_UART_Transmit(HUART, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 
 

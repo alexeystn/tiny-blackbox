@@ -73,6 +73,7 @@ NVIC.PendSV_IRQn=true\:0\:0\:false\:false\:true\:false\:false
 NVIC.SVC_IRQn=true\:0\:0\:false\:false\:true\:false\:false
 NVIC.SysTick_IRQn=true\:0\:0\:false\:false\:true\:false\:true
 NVIC.TIM17_IRQn=true\:3\:0\:true\:false\:true\:true\:true
+NVIC.USART1_IRQn=true\:0\:0\:false\:false\:true\:true\:true
 PA1.GPIOParameters=GPIO_Label
 PA1.GPIO_Label=LED
 PA1.Locked=true

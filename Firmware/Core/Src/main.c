@@ -26,6 +26,7 @@
 #include "w25q.h"
 #include "logger.h"
 #include "led.h"
+#include "cli.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -110,7 +111,7 @@ int main(void)
   LED_Init();
   LED_SetStatus(ST_IDLE_WRITE);
 
-  while (1) {
+  while (1) { // WRITE loop
 
     st = Logger_WriteLoop();
     if (Logger_IsMemoryFull()) {
@@ -127,18 +128,38 @@ int main(void)
   LED_SetStatus(ST_IDLE_READ);
   LED_Blink(3);
   while (!Logger_KeyUnpressed(200)) {};
-  Logger_SendStats();
+  CLI_Start();
 
-  while (1) {
+  while (1) { // READ loop
 
-    Logger_ReadLoop();
+    enum cli_cmd_t cmd;
+    if (CLI_GetCommand(&cmd)) {
+      LED_SetStatus(ST_BUSY);
+
+      switch (cmd) {
+      case CMD_READ:
+        Logger_Read(0);
+        break;
+      case CMD_DUMP:
+        Logger_Read(1);
+        break;
+      case CMD_ERASE:
+        Logger_Erase();
+        break;
+      case CMD_INFO:
+        Logger_SendInfo();
+        break;
+      default:
+        break;
+      }
+      LED_SetStatus(ST_IDLE_READ);
+    }
 
     if (Logger_KeyPressed(3000)) {
       break;
     }
   }
 
-  LED_SetStatus(ST_BUSY);
   Logger_Erase();
   NVIC_SystemReset();
 
