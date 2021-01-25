@@ -9,6 +9,8 @@ Tiny Blackbox is an open source ultra-light external logger for micro drones.
 * Flash memory: 16 MB, W25Q128
 * MCU: STM32F042
 
+![Whoop](whoop.jpg)
+
 ## Setup
 1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).
 
@@ -37,7 +39,4 @@ Tiny Blackbox is an open source ultra-light external logger for micro drones.
 ## Future plans
 * Cross-platform GUI
 
-<br/>
-<br/>
 Feel free to contact me in Telegram: [@AlexeyStn](https://t.me/AlexeyStn)
-
