@@ -2,22 +2,28 @@
 #include "defines.h"
 #include "logger.h"
 
+#define CMD_MAX_LENGTH  16
+
 volatile enum cli_cmd_t latestCommand = 0;
-bool commandNotRead = false;
-
-
-#define CLI_RX_BUF_LEN  16
+bool commandAvailable = false;
 static int cliRxPnt = 0;
-static uint8_t cliRxBuf[CLI_RX_BUF_LEN];
-static uint8_t dummyByte;
+static uint8_t cliRxBuf[CMD_MAX_LENGTH];
 bool cliEnabled = false;
 
-const char cliCommands[CMD_N][CLI_RX_BUF_LEN] = {
+const char cliCommands[CMD_N][CMD_MAX_LENGTH] = {
     "info",
     "read",
     "dump",
     "erase"
 };
+
+
+void CLI_Start(void)
+{
+  static uint8_t dummyByte;
+  cliEnabled = true;
+  HAL_UART_Receive_IT(HUART, &dummyByte, 1);
+}
 
 
 static void CLI_ParseBuffer(int len)
@@ -35,7 +41,7 @@ static void CLI_ParseBuffer(int len)
     }
     if (res == true) {
       latestCommand = icmd;
-      commandNotRead = true;
+      commandAvailable = true;
       return;
     }
   }
@@ -50,24 +56,17 @@ void CLI_ProcessRxByte(uint8_t byte)
     CLI_ParseBuffer(cliRxPnt);
     cliRxPnt = 0;
   }
-  if (cliRxPnt == CLI_RX_BUF_LEN) {
+  if (cliRxPnt == CMD_MAX_LENGTH) {
     cliRxPnt = 0;
   }
 }
 
 
-void CLI_Start(void)
-{
-  cliEnabled = true;
-  HAL_UART_Receive_IT(HUART, &dummyByte, 1);
-}
-
-
 bool CLI_GetCommand(enum cli_cmd_t *cmd)
 {
-  if (commandNotRead) {
+  if (commandAvailable) {
     *cmd = latestCommand;
-    commandNotRead = false;
+    commandAvailable = false;
     return true;
   } else {
     return false;

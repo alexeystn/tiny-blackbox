@@ -5,16 +5,16 @@
 #include "defines.h"
 
 
-enum dmaFlagUART_t {
+enum uartDmaFlag_t {
   DMA_FLAG_NONE,
   DMA_FLAG_HALF,
   DMA_FLAG_FULL,
 };
 
 
-volatile enum dmaFlagUART_t dmaFlagUart = DMA_FLAG_NONE;
-uint8_t bufUartRx[W25_PAGE_SIZE*2];
-int pageCounter = 0;
+volatile enum uartDmaFlag_t uartDmaFlag = DMA_FLAG_NONE;
+uint8_t uartRxBuf[W25_PAGE_SIZE*2];
+int pagePointer = 0;
 
 
 void Logger_Erase(void)
@@ -24,58 +24,25 @@ void Logger_Erase(void)
   while (W25_GetStatus()) {
     HAL_Delay(100);
   }
-  pageCounter = 0;
+  pagePointer = 0;
 }
 
 
 void Logger_Read(bool readFullMemory)
 {
   uint8_t buf[W25_PAGE_SIZE];
-  char str[100];
   int n;
 
   if (readFullMemory) {
     n = W25_PAGE_COUNT;
   } else {
-    n = pageCounter;
+    n = pagePointer;
   }
 
   for (int i = 0; i < n; i++) {
     W25_ReadPage(i, buf);
     HAL_UART_Transmit(HUART, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
   }
-}
-
-
-enum status_t Logger_ReadLoop(void)
-{
-  static int readPageCounter = 0;
-  uint8_t buf[W25_PAGE_SIZE];
-
-  if (readPageCounter < W25_PAGE_COUNT) {
-
-    W25_ReadPage(readPageCounter, buf);
-    HAL_UART_Transmit(HUART, buf, W25_PAGE_SIZE, HAL_MAX_DELAY);
-    readPageCounter++;
-    return ST_BUSY;
-  } else {
-    return ST_IDLE_READ;
-  }
-}
-
-
-bool Logger_IsPageEmpty(int n)
-{
-  uint8_t buf[W25_PAGE_SIZE];
-
-  W25_ReadPage(n, buf);
-  for (int j = 0; j < W25_PAGE_SIZE; j++) {
-    if (buf[j] != 0xFF) {
-      return false;
-      break;
-    }
-  }
-  return true;
 }
 
 
@@ -120,20 +87,20 @@ void Logger_Init(void)
 {
   Logger_SetUartBaudRate(UART_BAUDRATE_WRITE);
   W25_ResetClock();
-  pageCounter = Logger_FindFirstEmptyPage();
-  HAL_UART_Receive_DMA(&huart1, bufUartRx, W25_PAGE_SIZE*2);
+  pagePointer = Logger_FindFirstEmptyPage();
+  HAL_UART_Receive_DMA(&huart1, uartRxBuf, W25_PAGE_SIZE*2);
 }
 
 
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
 {
-  dmaFlagUart = DMA_FLAG_HALF;
+  uartDmaFlag = DMA_FLAG_HALF;
 }
 
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  dmaFlagUart = DMA_FLAG_FULL;
+  uartDmaFlag = DMA_FLAG_FULL;
 }
 
 
@@ -144,29 +111,29 @@ enum status_t Logger_WriteLoop(void)
   int currTime = HAL_GetTick();
   uint8_t flag = DMA_FLAG_NONE;
 
-  flag = dmaFlagUart;
+  flag = uartDmaFlag;
 
   if (flag != DMA_FLAG_NONE) {
     prevRxTime = currTime;
-    dmaFlagUart = DMA_FLAG_NONE;
+    uartDmaFlag = DMA_FLAG_NONE;
 
     if (flag == DMA_FLAG_HALF) {
-      bufPointer = &bufUartRx[0];
+      bufPointer = &uartRxBuf[0];
     }
     if (flag == DMA_FLAG_FULL) {
-      bufPointer = &bufUartRx[W25_PAGE_SIZE];
+      bufPointer = &uartRxBuf[W25_PAGE_SIZE];
     }
-    if (pageCounter < W25_PAGE_COUNT) {
+    if (pagePointer < W25_PAGE_COUNT) {
       W25_WriteEnable();
-      W25_WritePage(pageCounter, bufPointer, W25_PAGE_SIZE);
+      W25_WritePage(pagePointer, bufPointer, W25_PAGE_SIZE);
       while (W25_GetStatus()) {};
     }
-    pageCounter++;
+    pagePointer++;
   }
   if ((currTime - prevRxTime) < 100) {
-    return ST_BUSY;
+    return STATUS_BUSY;
   } else {
-    return ST_IDLE_WRITE;
+    return STATUS_IDLE_WRITE;
   }
 }
 
@@ -180,24 +147,24 @@ void Logger_Stop(void)
 
 bool Logger_IsMemoryFull(void)
 {
-  return (pageCounter >= W25_PAGE_COUNT);
+  return (pagePointer >= W25_PAGE_COUNT);
 }
 
 
 void Logger_SendInfo(void)
 {
   char str[100];
-  int d = (1000 * pageCounter)/W25_PAGE_COUNT;
+  int d = (1000 * pagePointer) / W25_PAGE_COUNT;
   sprintf(str, "Flash memory: %d.%d%% full\n", d/10, d%10 ); // @suppress("Float formatting support")
   HAL_UART_Transmit(HUART, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 
 
-uint8_t Logger_KeyPressed(int delayMs)
+uint8_t isKeyPressed(int delayMs)
 {
   int endTime = HAL_GetTick() + delayMs;
   while (!HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {
-    LED_BlinkShort();
+    LED_DimLight();
     if (HAL_GetTick() > endTime)
       return 1;
   }
@@ -205,7 +172,7 @@ uint8_t Logger_KeyPressed(int delayMs)
 }
 
 
-uint8_t Logger_KeyUnpressed(int delayMs)
+uint8_t isKeyUnpressed(int delayMs)
 {
   int endTime = HAL_GetTick() + delayMs;
   while (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin)) {

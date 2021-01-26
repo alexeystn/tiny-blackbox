@@ -80,7 +80,7 @@ static void MX_TIM17_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  enum status_t st;
+  enum status_t status;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -109,32 +109,32 @@ int main(void)
 
   Logger_Init();
   LED_Init();
-  LED_SetStatus(ST_IDLE_WRITE);
+  LED_SetStatus(STATUS_IDLE_WRITE);
 
   while (1) { // WRITE loop
 
-    st = Logger_WriteLoop();
+    status = Logger_WriteLoop();
     if (Logger_IsMemoryFull()) {
-      st = ST_FULL;
+      status = STATUS_FULL;
     }
-    LED_SetStatus(st);
+    LED_SetStatus(status);
 
-    if (Logger_KeyPressed(1000)) {
+    if (isKeyPressed(1000)) {
       break;
     }
   }
 
   Logger_Stop();
-  LED_SetStatus(ST_IDLE_READ);
+  LED_SetStatus(STATUS_IDLE_READ);
   LED_Blink(3);
-  while (!Logger_KeyUnpressed(200)) {};
+  while (!isKeyUnpressed(200)) {};
   CLI_Start();
 
   while (1) { // READ loop
 
     enum cli_cmd_t cmd;
     if (CLI_GetCommand(&cmd)) {
-      LED_SetStatus(ST_BUSY);
+      LED_SetStatus(STATUS_BUSY);
 
       switch (cmd) {
       case CMD_READ:
@@ -152,10 +152,10 @@ int main(void)
       default:
         break;
       }
-      LED_SetStatus(ST_IDLE_READ);
+      LED_SetStatus(STATUS_IDLE_READ);
     }
 
-    if (Logger_KeyPressed(3000)) {
+    if (isKeyPressed(3000)) {
       break;
     }
   }

@@ -1,7 +1,6 @@
 #include "main.h"
 #include "led.h"
-
-#define HTIM    &htim17
+#include "defines.h"
 
 const uint8_t sequenceSingleBlink[] = {150, 2, 0};
 const uint8_t sequenceDoubleBlink[] = {100, 2, 20, 2, 0};
@@ -16,27 +15,27 @@ bool ledStatusEnabled = true;
 
 void LED_Init(void)
 {
-  HAL_TIM_Base_Start_IT(HTIM);
+  HAL_TIM_Base_Start_IT(HTIM_LED);
 }
 
 
 void LED_SetStatus(enum status_t st)
 {
-  static enum status_t prevLedStatus = ST_IDLE_WRITE;
+  static enum status_t prevLedStatus = STATUS_IDLE_WRITE;
 
   if (st != prevLedStatus) {
     ledStatusEnabled = false;
     switch (st) {
-    case ST_IDLE_WRITE:
+    case STATUS_IDLE_WRITE:
       activeSequence = sequenceSingleBlink;
       break;
-    case ST_IDLE_READ:
+    case STATUS_IDLE_READ:
       activeSequence = sequenceDoubleBlink;
       break;
-    case ST_BUSY:
+    case STATUS_BUSY:
       activeSequence = sequenceFastBlink;
       break;
-    case ST_FULL:
+    case STATUS_FULL:
       activeSequence = sequenceFull;
       break;
     }
@@ -68,7 +67,7 @@ void LED_Handle(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  if ((htim == HTIM) && (ledStatusEnabled)) {
+  if ((htim == HTIM_LED) && (ledStatusEnabled)) {
     LED_Handle();
   }
 }
@@ -88,8 +87,9 @@ void LED_Blink(uint8_t n)
 }
 
 
-void LED_BlinkShort(void)
+void LED_DimLight(void)
 {
+  // 5% duty cycle to emulate dim light
   ledStatusEnabled = false;
   LED_ON;
   HAL_Delay(1);

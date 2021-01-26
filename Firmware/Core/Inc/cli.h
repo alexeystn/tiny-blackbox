@@ -1,6 +1,7 @@
-#include "main.h"
 #ifndef CLI_H
 #define CLI_H
+
+#include "main.h"
 
 enum cli_cmd_t {
   CMD_INFO,
