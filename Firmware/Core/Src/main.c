@@ -160,6 +160,7 @@ int main(void)
     }
   }
 
+  LED_SetStatus(STATUS_BUSY);
   Logger_Erase();
   NVIC_SystemReset();
 
