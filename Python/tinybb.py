@@ -68,8 +68,9 @@ def save_rx_data_to_file(ser, f):
     except KeyboardInterrupt:
         print()
         print('cancelled')
+    f.close()
     print('\n'+str(rx_counter) + ' bytes received')
-    print(filename + ' saved')    
+    print(f.name + ' saved')    
 
 
 def process_args():
@@ -82,7 +83,7 @@ def process_args():
         return None
 
 
-def func_information(ser):
+def func_information(ser, f=None):
     ser.flushInput()
     ser.write('\n'.encode())
     time.sleep(0.1)
@@ -91,25 +92,25 @@ def func_information(ser):
     if len(resp) > 0:
         print(resp.decode().strip())
     else:
-        print('No response from Blackbox')
+        print('No response from Blackbox. Check if Read mode is ON. ')
 
 
-def func_read(ser):
+def func_read(ser, f):
     ser.write('read\n'.encode())
     save_rx_data_to_file(ser, f)
 
 
-def func_dump(ser):
+def func_dump(ser, f):
     ser.write('dump\n'.encode())
     save_rx_data_to_file(ser, f)
 
 
-def func_erase(ser):
+def func_erase(ser, f=None):
     print('Erasing, wait ~30 seconds')
     ser.write('erase\n'.encode())
 
 
-def func_exit(ser):
+def func_exit(ser, f=None):
     return
 
 
@@ -135,7 +136,7 @@ def main():
         func_information(ser)
         print()
         if cli_argument:
-            commands[cli_argument][1](ser)
+            commands[cli_argument][1](ser, f)
         else:
             for k in commands: print(k + ' - ' + commands[k][0])
             print()
@@ -145,7 +146,7 @@ def main():
                 while not user_command in commands:
                     print('> ', end='')
                     user_command = input()
-                commands[user_command][1](ser)
+                commands[user_command][1](ser, f)
                 if user_command == 'x':
                     break
 
