@@ -1,3 +1,5 @@
 Firmware/Debug
 *.bin
 *.bbl
+Python/*.json
+!Python/config.json
