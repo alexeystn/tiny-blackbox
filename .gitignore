@@ -1,5 +1,6 @@
-Firmware/Debug
+Firmware/Debug/*
 *.bin
 *.bbl
 Python/*.json
 !Python/config.json
+!Firmware/Debug/BlackBox.hex
