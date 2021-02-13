@@ -14,10 +14,8 @@ Tiny Blackbox is an open source ultra-light external logger for micro drones.
 ![Whoop](Images/whoop.jpg)
 
 ## Setup
-1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).
-
 ![Pinout](Images/pinout.png)
-
+1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).
 2) Setup blackbox in Betaflight Configurator:
 * Ports tab: Peripherals -> Blackbox logging, speed 1500000.
 * Modes tab: Blackbox -> assign to any available AUX switch.
@@ -81,10 +79,6 @@ Blackbox_Log_20210213_112830.bbl saved
 ```
 </details>
 
-## Future plans
-* Cross-platform GUI
-* Support 8 kHz logging rate
-
 ## For developers and enthusiasts
 
 * Build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html)
@@ -92,5 +86,9 @@ Blackbox_Log_20210213_112830.bbl saved
 * Connect ST-Link programmer to following pins:
 
 ![STLink](Images/swd.png)
+
+## Future plans
+* Cross-platform GUI
+* Support 8 kHz logging rate
 
 Feel free to contact me in Telegram: [@AlexeyStn](https://t.me/AlexeyStn)
