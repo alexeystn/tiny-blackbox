@@ -31,7 +31,9 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -61,11 +63,16 @@ void Error_Handler(void);
 #define TEST_POINT_GPIO_Port GPIOC
 #define LED_Pin GPIO_PIN_2
 #define LED_GPIO_Port GPIOA
-#define SPI1_CS_Pin GPIO_PIN_3
-#define SPI1_CS_GPIO_Port GPIOA
+#define SPI1_NSS_Pin GPIO_PIN_3
+#define SPI1_NSS_GPIO_Port GPIOA
 #define KEY_Pin GPIO_PIN_0
 #define KEY_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+
+extern TIM_HandleTypeDef htim17;
+extern SPI_HandleTypeDef hspi1;
+extern UART_HandleTypeDef huart1;
+extern DMA_HandleTypeDef hdma_spi1_tx;
 
 /* USER CODE END Private defines */
 
