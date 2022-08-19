@@ -7,13 +7,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -28,13 +27,11 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f0xx_hal.h"
+#include "stm32g0xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -56,19 +53,18 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-extern TIM_HandleTypeDef htim17;
-extern SPI_HandleTypeDef hspi1;
-extern UART_HandleTypeDef huart1;
-extern DMA_HandleTypeDef hdma_spi1_tx;
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED_Pin GPIO_PIN_1
+#define TEST_POINT_Pin GPIO_PIN_15
+#define TEST_POINT_GPIO_Port GPIOC
+#define LED_Pin GPIO_PIN_2
 #define LED_GPIO_Port GPIOA
-#define SPI1_NSS_Pin GPIO_PIN_3
-#define SPI1_NSS_GPIO_Port GPIOA
-#define KEY_Pin GPIO_PIN_4
-#define KEY_GPIO_Port GPIOA
+#define SPI1_CS_Pin GPIO_PIN_3
+#define SPI1_CS_GPIO_Port GPIOA
+#define KEY_Pin GPIO_PIN_0
+#define KEY_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
@@ -78,5 +74,3 @@ extern DMA_HandleTypeDef hdma_spi1_tx;
 #endif
 
 #endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
