@@ -1,6 +1,8 @@
 Firmware/Debug/*
+Firmware_Old/Debug/*
 *.bin
 *.bbl
 Python/*.json
 !Python/config.json
 !Firmware/Debug/BlackBox.hex
+!Firmware_Old/Debug/BlackBox.hex
