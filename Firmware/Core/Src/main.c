@@ -50,7 +50,6 @@ TIM_HandleTypeDef htim17;
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -357,9 +356,6 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel2_3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
-  /* DMA1_Ch4_5_DMAMUX1_OVR_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Ch4_5_DMAMUX1_OVR_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Ch4_5_DMAMUX1_OVR_IRQn);
 
 }
 
@@ -381,10 +377,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(TEST_POINT_GPIO_Port, TEST_POINT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|SPI1_NSS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : TEST_POINT_Pin */
   GPIO_InitStruct.Pin = TEST_POINT_Pin;
