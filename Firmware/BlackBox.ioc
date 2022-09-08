@@ -97,6 +97,7 @@ NVIC.SPI1_IRQn=true\:0\:0\:false\:false\:true\:true\:true
 NVIC.SVC_IRQn=true\:0\:0\:false\:false\:true\:false\:false
 NVIC.SysTick_IRQn=true\:3\:0\:false\:false\:true\:false\:true
 NVIC.TIM17_IRQn=true\:0\:0\:false\:false\:true\:true\:true
+NVIC.USART1_IRQn=true\:0\:0\:false\:false\:true\:true\:true
 PA13.Mode=Serial_Wire
 PA13.Signal=SYS_SWDIO
 PA14-BOOT0.Mode=Serial_Wire

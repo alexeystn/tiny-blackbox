@@ -95,12 +95,16 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+  // IMPORTANT!!!
+  // MX_DMA_Init() must be called before MX_SPI1_Init()
+  // Check initialization sequence after MX Cube code generation
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SPI1_Init();
   MX_DMA_Init();
+  MX_SPI1_Init();
   MX_USART1_UART_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
