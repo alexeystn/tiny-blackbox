@@ -42,12 +42,15 @@ def bf_enable_passthrough(ser, config):
             print(' >> ' + s)
     print('==============================')
     print()
+    time.sleep(1)
 
 
-def save_rx_data_to_file(ser, f):
+def save_rx_data_to_file(ser):
     rx_counter = 0
     rx_counter_scaled = 0
     rx_counter_scaled_prev = 0
+    filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
+    f = open(filename, 'wb')
     print('Downloading:')
     print('Press ctrl+c to stop')
     try:
@@ -83,7 +86,7 @@ def process_args():
         return None
 
 
-def func_information(ser, f=None):
+def func_information(ser):
     ser.flushInput()
     ser.write('\n'.encode())
     time.sleep(0.1)
@@ -95,22 +98,22 @@ def func_information(ser, f=None):
         print('No response from Blackbox. Check if Read mode is ON. ')
 
 
-def func_read(ser, f):
+def func_read(ser):
     ser.write('read\n'.encode())
-    save_rx_data_to_file(ser, f)
+    save_rx_data_to_file(ser)
 
 
-def func_dump(ser, f):
+def func_dump(ser):
     ser.write('dump\n'.encode())
-    save_rx_data_to_file(ser, f)
+    save_rx_data_to_file(ser)
 
 
-def func_erase(ser, f=None):
+def func_erase(ser):
     print('Erasing, wait ~30 seconds')
     ser.write('erase\n'.encode())
 
 
-def func_exit(ser, f=None):
+def func_exit(ser):
     return
 
 
@@ -125,8 +128,6 @@ def main():
     if cli_argument and not cli_argument in commands:
         print('Wrong command line argument')
         sys.exit()
-    filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
-    f = open(filename, 'wb')
     serial_port_result = 0
     with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser:
         serial_port_result = 1
@@ -136,7 +137,7 @@ def main():
         func_information(ser)
         print()
         if cli_argument:
-            commands[cli_argument][1](ser, f)
+            commands[cli_argument][1](ser)
         else:
             for k in commands: print(k + ' - ' + commands[k][0])
             print()
@@ -146,7 +147,7 @@ def main():
                 while not user_command in commands:
                     print('> ', end='')
                     user_command = input()
-                commands[user_command][1](ser, f)
+                commands[user_command][1](ser)
                 if user_command == 'x':
                     break
 
