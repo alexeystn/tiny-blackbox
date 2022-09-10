@@ -132,6 +132,7 @@ def main():
     with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser:
         serial_port_result = 1
         print('Open ' + config['port'] + ' successfully')
+        save_config(config)
         if config['use_passthrough'] != 0:
             bf_enable_passthrough(ser, config)
         func_information(ser)
