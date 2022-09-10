@@ -19,3 +19,6 @@ for i in range(size):
         if error_count > 20:
             print('Too many errors')
             break
+        
+if error_count == 0:
+    print('No errors detected')
