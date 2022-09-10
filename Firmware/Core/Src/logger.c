@@ -127,8 +127,8 @@ enum status_t Logger_WriteLoop(void)
       W25_WriteEnable();
       W25_WritePage(pagePointer, bufPointer, W25_PAGE_SIZE);
       while (W25_GetStatus()) {};
+      pagePointer++;
     }
-    pagePointer++;
   }
   if ((currTime - prevRxTime) < 100) {
     return STATUS_BUSY;
