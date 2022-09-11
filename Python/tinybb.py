@@ -44,14 +44,14 @@ def load_config():
 
 def save_config(config):
     with open('config.json', 'w') as f:
-        json.dump(config, f, indent=2)  
+        json.dump(config, f, indent=2)
 
 
 def bf_enable_passthrough(ser, config):
     print()
-    print('===== Betafligh CLI mode =====')
+    print('===== Betaflight CLI mode =====')
     ser.write(b'#\n')
-    res = ser.readline()
+    ser.readline()
     request_str = 'serialpassthrough ' + str(config['bf_uart_number'] - 1) + ' ' + str(config['baudrate']) + '\n'
     ser.write(request_str.encode())
     while True:
@@ -68,14 +68,13 @@ def bf_enable_passthrough(ser, config):
 
 def save_rx_data_to_file(ser):
     rx_counter = 0
-    rx_counter_scaled = 0
     rx_counter_scaled_prev = 0
     filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
     f = open(filename, 'wb')
     print('Downloading:')
     print('Press ctrl+c to stop')
     try:
-        while True: # print dots and megabytes
+        while True:  # print dots and megabytes
             d = ser.read(1000)
             if len(d) > 0:
                 rx_counter += len(d)
@@ -94,15 +93,15 @@ def save_rx_data_to_file(ser):
         print('cancelled')
     f.close()
     print('\n'+str(rx_counter) + ' bytes received')
-    print(f.name + ' saved')    
+    print(f.name + ' saved')
 
 
 def process_args():
     arguments = sys.argv
     if len(arguments) > 1:
-        a = arguments[1] # skip [0] .py script name
+        a = arguments[1]  # skip [0] .py script name
         if (len(a) == 2) and (a.startswith('-')):
-            return a[1] # remove dash
+            return a[1]  # remove dash
     else:
         return None
 
@@ -135,23 +134,25 @@ def func_erase(ser):
 
 
 def func_exit(ser):
+    _ = ser
     return
 
 
 def main():
     config = load_config()
-    commands = dict({'i':['Information', func_information],
-                     'r':['Read memory', func_read],
-                     'd':['Dump full memory', func_dump],
-                     'e':['Erase', func_erase],
-                     'x':['Exit', func_exit] })
+    commands = dict({'i': ['Information', func_information],
+                     'r': ['Read memory', func_read],
+                     'd': ['Dump full memory', func_dump],
+                     'e': ['Erase', func_erase],
+                     'x': ['Exit', func_exit]})
     cli_argument = process_args()
-    if cli_argument and not cli_argument in commands:
+    if cli_argument and cli_argument not in commands:
         print('Wrong command line argument')
         sys.exit()
-    serial_port_result = 0
-    with serial.Serial(config['port'], config['baudrate'], timeout=1) as ser:
-        serial_port_result = 1
+
+    ser = None
+    try:
+        ser = serial.Serial(config['port'], config['baudrate'], timeout=1)
         print('Open ' + config['port'] + ' successfully')
         save_config(config)
         if config['use_passthrough'] != 0:
@@ -161,23 +162,25 @@ def main():
         if cli_argument:
             commands[cli_argument][1](ser)
         else:
-            for k in commands: print(k + ' - ' + commands[k][0])
+            for k in commands:
+                print(k + ' - ' + commands[k][0])
             print()
             print('Enter command: ')
             while True:
                 user_command = None
-                while not user_command in commands:
+                while user_command not in commands:
                     print('> ', end='')
                     user_command = input()
                 commands[user_command][1](ser)
                 if user_command == 'x':
                     break
-
-    if serial_port_result == 0:
+    except serial.SerialException:
         print('Cannot open ' + config['port'])
-    else:
-        save_config(config)
-    print()
+    except Exception as e:
+        print(e)
+    finally:
+        ser.close()
+        print()
 
 
 if __name__ == "__main__":
