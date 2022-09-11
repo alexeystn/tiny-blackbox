@@ -6,9 +6,30 @@ import serial
 import serial.tools.list_ports
 
 
+def get_default_config():
+    print('Loading default config.')
+    default_config = {"port": "COM0", "baudrate": 500000, "use_passthrough": 0, "bf_uart_number": 1}
+    save_config(default_config)
+    return default_config
+
+
 def load_config():
-    with open('config.json', 'r') as f:
-        config = json.load(f)
+    try:
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        print('File "config.json" not found.')
+        config = get_default_config()
+
+    except json.JSONDecodeError:
+        print('File "config.json" is corrupted.')
+        print('Would you like to reset settings? [Y/n].')
+        user_input = input()
+        if user_input.upper() == 'Y':
+            config = get_default_config()
+        else:
+            sys.exit(0)
+
     available_ports = [c.device for c in serial.tools.list_ports.comports()]
     if not config['port'] in available_ports:
         print('Cannot find serial port \'{0}\''.format(config['port']))
