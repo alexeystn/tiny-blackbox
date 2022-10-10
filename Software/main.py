@@ -129,10 +129,10 @@ class SerialThread(QObject):
                 rx_counter_scaled = rx_counter // (2 ** 15)
                 if rx_counter_scaled > rx_counter_scaled_prev:
                     self.progressTextSignal.emit('{0:.1f} Mb'.format(rx_counter / (2 ** 20)))
-                    self.progressValueSignal.emit(100 * rx_counter / (full_size * percents / 100))
+                    self.progressValueSignal.emit(round(100 * rx_counter / (full_size * percents / 100)))
                     print('.', end='', flush=True)
                     f.flush()
-                    if rx_counter_scaled % 16 == 0:
+                    if rx_counter_scaled % 32 == 0:
                         print('{0:.0f} Mb'.format(rx_counter / (2 ** 20)))
                     rx_counter_scaled_prev = rx_counter_scaled
             else:
