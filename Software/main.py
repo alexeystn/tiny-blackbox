@@ -1,4 +1,5 @@
 import sys
+import os
 import serial
 import time
 from datetime import datetime
@@ -30,7 +31,7 @@ class Settings(QSettings):
         Use command 'killall -u $USER cfprefsd' to reload settings
         2) Windows - settings are stored in system registry: /HKEY_CURRENT_USER/Software/AlexeyStn/TinyBlackbox
         """
-        defaultConfig = {'port': 'COM1', 'type': 0, 'uart': 1}
+        defaultConfig = {'port': 'COM1', 'type': 0, 'uart': 1, 'directory': ''}
         success = True
         for item in defaultConfig:
             value = self.value(item)
@@ -302,10 +303,14 @@ class Window(QWidget):
             self.eraseFlashSignal.emit()
 
     def buttonSavePress(self):
-        # TODO: remember last directory
-        filename = QFileDialog.getSaveFileName(self, 'Save file',
-                                               datetime.now().strftime('Blackbox_%Y%m%d_%H%M%S.bbl'))[0]
-        self.saveLogToFileSignal.emit(filename)
+        lastDirectory = self.settings.currentConfig['directory']
+        newFilename = datetime.now().strftime('Blackbox_%Y%m%d_%H%M%S.bbl')
+        newPath = os.path.join(lastDirectory, newFilename)
+        filename = QFileDialog.getSaveFileName(self, 'Save file', newPath)[0]
+        if filename != '':
+            self.settings.currentConfig['directory'] = os.path.split(filename)[0]
+            self.saveLogToFileSignal.emit(filename)
+            self.settings.save()
 
     def buttonConnectPress(self):
         if self.worker.isConnected:
