@@ -13,10 +13,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, QSettings, pyqtSignal, QThread, QObject
 
 
-def run():
-    print("Run")
-
-
 class Settings(QSettings):
 
     currentConfig = {}
@@ -153,19 +149,20 @@ class SerialThread(QObject):
             return
         # TODO: make some feedback from MCU
         self.instance.write('erase\n'.encode())
-        erasingTotalTime = 30 + 1
+        erasingTotalTime = 40
         progressStep = 0.25
         self.progressTextSignal.emit('')
         self.progressValueSignal.emit(0)
         self.statusTextSignal.emit('Erasing')
         for i in range(round(erasingTotalTime / progressStep)):
             progress = i/(erasingTotalTime / progressStep) * 100
-            self.progressValueSignal.emit(progress)
-            self.progressTextSignal.emit('{0:.0f}%'.format(progress))
+            self.progressValueSignal.emit(round(progress))
+            #self.progressTextSignal.emit('{0:.0f}%'.format(progress))
+            self.progressTextSignal.emit('0:{0:02.0f}'.format(erasingTotalTime - i * progressStep))
             time.sleep(progressStep)
         self.statusTextSignal.emit('Done')
-        self.progressTextSignal.emit('100%')
-        self.progressValueSignal.emit(100)
+        self.progressTextSignal.emit('')
+        self.progressValueSignal.emit(0)
 
     def disconnectFromPort(self):
         self.instance.close()
