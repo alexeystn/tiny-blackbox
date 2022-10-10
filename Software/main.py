@@ -105,13 +105,13 @@ class SerialThread(QObject):
                 line = 'Cannot decode response'
             finally:
                 self.progressValueSignal.emit(int(percents))
-                self.progressTextSignal.emit('Used: {0:.1f}%'.format(percents))
+                self.progressTextSignal.emit('{0:.1f}% used'.format(percents))
                 self.statusTextSignal.emit(line)
                 self.setConnectionStatus(True)
         else:
             self.statusTextSignal.emit('No response from Blackbox')
             self.progressValueSignal.emit(0)
-            self.progressTextSignal.emit('Check button')
+            self.progressTextSignal.emit('')
 
     def saveToFile(self, filename):
         if not self.isConnected:
@@ -181,7 +181,6 @@ class Window(QWidget):
     stopConnectionSignal = pyqtSignal()
     saveLogToFileSignal = pyqtSignal(str)
     eraseFlashSignal = pyqtSignal()
-    isConnected = False
 
     def __init__(self):
         super().__init__()
@@ -258,13 +257,6 @@ class Window(QWidget):
         self.buttonErase.clicked.connect(self.buttonErasePress)
         self.buttonSave.clicked.connect(self.buttonSavePress)
         self.handleTypeSelection()
-        self.previousPorts = []
-        self.serialPort = None
-        self.updatePorts()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.updatePorts)
-        self.timer.start(1000)
-        self.percents = 100
 
         self.thread = QThread()
         self.worker = SerialThread()
@@ -277,9 +269,15 @@ class Window(QWidget):
         self.stopConnectionSignal.connect(self.worker.disconnectFromPort)
         self.saveLogToFileSignal.connect(self.worker.saveToFile)
         self.eraseFlashSignal.connect(self.worker.eraseFlash)
-        # self.thread.started.connect(self.worker.initPortScan)
         self.thread.start()
-        self.applyConnectionStatus(self.isConnected)
+        self.applyConnectionStatus(False)
+
+        self.previousPorts = []
+        self.updatePorts()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.updatePorts)
+        self.timer.start(1000)
+        self.percents = 100
 
     def updateProgressValue(self, value):
         self.progressBarMemory.setValue(int(value))
@@ -293,7 +291,6 @@ class Window(QWidget):
     def applyConnectionStatus(self, status):
         self.buttonErase.setEnabled(status)
         self.buttonSave.setEnabled(status)
-        self.isConnected = status
         if status:
             self.buttonConnect.setText('Disconnect')
         else:
@@ -303,7 +300,6 @@ class Window(QWidget):
         button = QMessageBox.question(self, 'Blackbox', "Do you want to erase flash?")
         if button == QMessageBox.Yes:
             self.eraseFlashSignal.emit()
-            QMessageBox.information(self, 'Blackbox', 'Wait ~30s until LED is blinking')
 
     def buttonSavePress(self):
         # TODO: remember last directory
@@ -312,7 +308,7 @@ class Window(QWidget):
         self.saveLogToFileSignal.emit(filename)
 
     def buttonConnectPress(self):
-        if self.isConnected:
+        if self.worker.isConnected:
             self.stopConnectionSignal.emit()
             return
         if self.comboBoxPort.currentText() == '':
@@ -339,13 +335,9 @@ class Window(QWidget):
         self.comboBoxPort.addItems(portList)
         if self.settings.currentConfig['port'] in portList:
             self.comboBoxPort.setCurrentText(self.settings.currentConfig['port'])
-        if self.isConnected:
-            if self.serialPort.name not in portList:
-                self.serialPort.close()
-                self.isConnected = False
-                self.labelStatus.setText('Connection lost')
-                self.progressBarMemory.setValue(0)
-                self.progressBarMemory.setFormat('')
+        if self.worker.isConnected:
+            if self.worker.name not in portList:
+                self.stopConnectionSignal.emit()
 
     def handleTypeSelection(self):
         if self.comboBoxType.currentText() == self.connectionTypes[0]:
@@ -354,8 +346,8 @@ class Window(QWidget):
             self.lineEditUart.setEnabled(True)
 
     def closeEvent(self, event):
-        if self.serialPort:
-            self.serialPort.close()
+        if self.worker.isConnected:
+            self.stopConnectionSignal.emit()
 
 
 if __name__ == '__main__':
