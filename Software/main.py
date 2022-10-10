@@ -7,9 +7,9 @@ import serial.tools.list_ports
 from PyQt5.QtWidgets import (
     QWidget, QApplication, QGridLayout, QVBoxLayout, QSpacerItem,
     QPushButton, QComboBox, QLineEdit, QProgressBar, QLabel,
-    QTextEdit, QMessageBox, QFileDialog
+    QMessageBox, QFileDialog
 )
-from PyQt5.QtCore import Qt, QTimer, QSettings, pyqtSignal, QThread
+from PyQt5.QtCore import Qt, QTimer, QSettings, pyqtSignal, QThread, QObject
 
 
 def run():
@@ -51,71 +51,79 @@ class Settings(QSettings):
             self.setValue(item, self.currentConfig[item])
 
 
-class SerialPort(QThread):
+class SerialThread(QObject):
 
-    status = ''
-    progressUpdateSignal = pyqtSignal(dict)
+    progressValueSignal = pyqtSignal(int)
+    progressTextSignal = pyqtSignal(str)
+    statusTextSignal = pyqtSignal(str)
+    connectionStatusSignal = pyqtSignal(bool)
 
-    def __init__(self, config):
-        QThread.__init__(self)
+    name = None
+    instance = None
+    isConnected = None
+    memoryUsedPercents = 100
+
+    def setConnectionStatus(self, status):
+        self.isConnected = status
+        self.connectionStatusSignal.emit(status)
+
+    def connectToPort(self, config):
+        self.statusTextSignal.emit('Connecting')
         self.name = config['port']
         self.instance = serial.Serial(self.name, baudrate=500000, timeout=1)  # + param
-        # self.use_passthrough = config['type']
-        print(self.instance)
+        if config['type']:
+            self.statusTextSignal.emit('Switching to Passthrough')
+            self.instance.write(b'#\n')
+            self.instance.readline()
+            request_str = 'serialpassthrough ' + \
+                          str(config['uart'] - 1) + ' ' + \
+                          str(500000) + '\n'
+            self.instance.write(request_str.encode())
+            while True:
+                res = self.instance.readline()
+                if len(res) == 0:
+                    break
+                s = res.decode().strip()
+                if len(s) > 0:
+                    print(' >> ' + s)
+        self.getInfo()
 
-    def bf_enable_passthrough(self, config):
-        print('===== Betaflight CLI mode =====')
-        self.instance.write(b'#\n')
-        self.instance.readline()
-        request_str = 'serialpassthrough ' + \
-                      str(config['uart'] - 1) + ' ' + \
-                      str(500000) + '\n'
-        self.instance.write(request_str.encode())
-        while True:
-            res = self.instance.readline()
-            if len(res) == 0:
-                break
-            s = res.decode().strip()
-            if len(s) > 0:
-                print(' >> ' + s)
-        print('==============================')
-
-    def get_info(self):
+    def getInfo(self):
         self.instance.flushInput()
         self.instance.write('\n'.encode())
         time.sleep(0.1)
         self.instance.write('info\n'.encode())
         resp = self.instance.readline()
-        print(resp)
         if len(resp) > 0:
             line = resp.decode().strip()
-            percents = None
+            percents = 0
             try:
                 percents = float(line.split(sep='%')[0].split(sep=' ')[-1])
                 line = 'Logger connected'
+                self.memoryUsedPercents = percents
             except:
                 line = 'Cannot decode response'
             finally:
-                self.status = (line, percents)
+                self.progressValueSignal.emit(int(percents))
+                self.progressTextSignal.emit('Used: {0:.1f}%'.format(percents))
+                self.statusTextSignal.emit(line)
+                self.setConnectionStatus(True)
         else:
-            self.status = ('No response from Blackbox', None)
+            self.statusTextSignal.emit('No response from Blackbox')
+            self.progressValueSignal.emit(0)
+            self.progressTextSignal.emit('Check button')
 
-    def erase(self):
-        self.instance.write('erase\n'.encode())
-
-    def save(self, params):
-        filename = params['filename']
-        percents = params['percents']
-        progress = {'text': 'Downloading', 'size': '0 kB', 'bar': 0}
-        self.progressUpdateSignal.emit(progress)
+    def saveToFile(self, filename):
+        if not self.isConnected:
+            return
+        percents = self.memoryUsedPercents
+        self.progressValueSignal.emit(0)
+        self.statusTextSignal.emit('Downloading')
         self.instance.write('read\n'.encode())
         f = open(filename, 'wb')
         rx_counter = 0
         rx_counter_scaled_prev = 0
-        full_size = 16*1024*1024
-        print('Downloading:')
-        print('Press ctrl+c to stop')
-
+        full_size = 16 * 1024 * 1024
         while True:  # print dots and megabytes
             d = self.instance.read(10000)
             if len(d) > 0:
@@ -123,9 +131,8 @@ class SerialPort(QThread):
                 f.write(d)
                 rx_counter_scaled = rx_counter // (2 ** 15)
                 if rx_counter_scaled > rx_counter_scaled_prev:
-                    progress['size'] = '{0:.1f} Mb'.format(rx_counter / (2 ** 20))
-                    progress['bar'] = 100 * rx_counter / (full_size * percents / 100)
-                    self.progressUpdateSignal.emit(progress)
+                    self.progressTextSignal.emit('{0:.1f} Mb'.format(rx_counter / (2 ** 20)))
+                    self.progressValueSignal.emit(100 * rx_counter / (full_size * percents / 100))
                     print('.', end='', flush=True)
                     f.flush()
                     if rx_counter_scaled % 16 == 0:
@@ -134,24 +141,47 @@ class SerialPort(QThread):
             else:
                 break
         f.close()
-        progress['text'] = 'Saved'
-        progress['size'] = '{0:.1f} Mb'.format(rx_counter / (2 ** 20))
-        progress['bar'] = 100
+        self.progressValueSignal.emit(100)
+        self.progressTextSignal.emit('{0:.1f} Mb saved'.format(rx_counter / (2 ** 20)))
+        self.statusTextSignal.emit('Done')
         print('\n' + str(rx_counter) + ' bytes received')
         print(f.name + ' saved')
 
-    def close(self):
-        self.instance.close()
+    def eraseFlash(self):
+        if not self.isConnected:
+            return
+        # TODO: make some feedback from MCU
+        self.instance.write('erase\n'.encode())
+        erasingTotalTime = 30 + 1
+        progressStep = 0.25
+        self.progressTextSignal.emit('')
+        self.progressValueSignal.emit(0)
+        self.statusTextSignal.emit('Erasing')
+        for i in range(round(erasingTotalTime / progressStep)):
+            progress = i/(erasingTotalTime / progressStep) * 100
+            self.progressValueSignal.emit(progress)
+            self.progressTextSignal.emit('{0:.0f}%'.format(progress))
+            time.sleep(progressStep)
+        self.statusTextSignal.emit('Done')
+        self.progressTextSignal.emit('100%')
+        self.progressValueSignal.emit(100)
 
-    def updateStatus(self):
-        return
+    def disconnectFromPort(self):
+        self.instance.close()
+        self.statusTextSignal.emit('Disconnected')
+        self.progressTextSignal.emit('')
+        self.progressValueSignal.emit(0)
+        self.setConnectionStatus(False)
 
 
 class Window(QWidget):
 
     connectionTypes = ['USB-Serial adapter', 'Betaflight passthrough']
+    startConnectionSignal = pyqtSignal(dict)
+    stopConnectionSignal = pyqtSignal()
+    saveLogToFileSignal = pyqtSignal(str)
+    eraseFlashSignal = pyqtSignal()
     isConnected = False
-    saveLogSignal = pyqtSignal(dict)
 
     def __init__(self):
         super().__init__()
@@ -236,34 +266,55 @@ class Window(QWidget):
         self.timer.start(1000)
         self.percents = 100
 
+        self.thread = QThread()
+        self.worker = SerialThread()
+        self.worker.moveToThread(self.thread)
+        self.worker.progressValueSignal.connect(self.updateProgressValue)
+        self.worker.progressTextSignal.connect(self.updateProgressText)
+        self.worker.statusTextSignal.connect(self.updateStatusText)
+        self.worker.connectionStatusSignal.connect(self.applyConnectionStatus)
+        self.startConnectionSignal.connect(self.worker.connectToPort)
+        self.stopConnectionSignal.connect(self.worker.disconnectFromPort)
+        self.saveLogToFileSignal.connect(self.worker.saveToFile)
+        self.eraseFlashSignal.connect(self.worker.eraseFlash)
+        # self.thread.started.connect(self.worker.initPortScan)
+        self.thread.start()
+        self.applyConnectionStatus(self.isConnected)
+
+    def updateProgressValue(self, value):
+        self.progressBarMemory.setValue(int(value))
+
+    def updateProgressText(self, text):
+        self.progressBarMemory.setFormat(text)
+
+    def updateStatusText(self, text):
+        self.labelStatus.setText(text)
+
+    def applyConnectionStatus(self, status):
+        self.buttonErase.setEnabled(status)
+        self.buttonSave.setEnabled(status)
+        self.isConnected = status
+        if status:
+            self.buttonConnect.setText('Disconnect')
+        else:
+            self.buttonConnect.setText('Connect')
+
     def buttonErasePress(self):
-        if self.isConnected:
-            button = QMessageBox.question(self, 'Blackbox', "Do you want to erase flash?")
-            if button == QMessageBox.Yes:
-                self.serialPort.erase()
-                QMessageBox.information(self, 'Blackbox', 'Wait ~30s until LED is blinking')
-                self.isConnected = False
-                self.labelStatus.setText('')
-                self.progressBarMemory.setValue(0)
-                self.progressBarMemory.setFormat('')
-                self.serialPort.close()
+        button = QMessageBox.question(self, 'Blackbox', "Do you want to erase flash?")
+        if button == QMessageBox.Yes:
+            self.eraseFlashSignal.emit()
+            QMessageBox.information(self, 'Blackbox', 'Wait ~30s until LED is blinking')
 
     def buttonSavePress(self):
-        if self.isConnected:
-            filename = QFileDialog.getSaveFileName(self, 'Save file',
-                                                   datetime.now().strftime('Blackbox_%Y%m%d_%H%M%S.bbl'))[0]
-            self.saveLogSignal.connect(self.serialPort.save)
-            # self.serialPort.save(filename, self.percents)
-            self.progressBarMemory.setValue(0)
-            self.progressBarMemory.setFormat('')
-            self.saveLogSignal.emit({'filename': filename, 'percents': self.percents})
-
-    def progressBarUpdate(self, progress):
-        self.labelStatus.setText(progress['text'])
-        self.progressBarMemory.setValue(progress['bar'])
-        self.progressBarMemory.setFormat(progress['size'])
+        # TODO: remember last directory
+        filename = QFileDialog.getSaveFileName(self, 'Save file',
+                                               datetime.now().strftime('Blackbox_%Y%m%d_%H%M%S.bbl'))[0]
+        self.saveLogToFileSignal.emit(filename)
 
     def buttonConnectPress(self):
+        if self.isConnected:
+            self.stopConnectionSignal.emit()
+            return
         if self.comboBoxPort.currentText() == '':
             self.labelStatus.setText('Port not selected')
             return
@@ -276,36 +327,7 @@ class Window(QWidget):
         if self.comboBoxType.currentIndex() == 1:
             self.settings.currentConfig['uart'] = int(self.lineEditUart.text())
         self.settings.save()
-        if self.isConnected:
-            print('Already connected')
-            return
-        print('Connecting:', self.settings.currentConfig)
-        self.serialPort = SerialPort(self.settings.currentConfig)
-        self.serialPort.progressUpdateSignal.connect(self.progressBarUpdate)
-        self.serialPort.start()
-        if self.serialPort:
-            if self.settings.currentConfig['type']:  # use passthrough
-                print('Entering passthrough')
-                self.labelStatus.setText('Passthrough')
-                self.serialPort.bf_enable_passthrough(self.settings.currentConfig)
-            self.serialPort.get_info()
-            self.isConnected = True
-            self.labelStatus.setText(self.serialPort.status[0])
-            if not self.serialPort.status[1] is None:
-                self.isConnected = True
-                self.percents = self.serialPort.status[1]
-                self.progressBarMemory.setValue(int(self.serialPort.status[1]))
-                self.progressBarMemory.setFormat('{0:.1f}%'.format(self.serialPort.status[1]))
-            else:
-                self.serialPort.close()
-                self.progressBarMemory.setValue(0)
-                self.progressBarMemory.setFormat('')
-                self.isConnected = False
-        else:
-            self.isConnected = False
-            self.labelStatus.setText('Cannot connect')
-            self.progressBarMemory.setValue(0)
-            self.progressBarMemory.setFormat('No blackbox')
+        self.startConnectionSignal.emit(self.settings.currentConfig)
 
     def updatePorts(self):
         portList = [c.device for c in serial.tools.list_ports.comports()]
@@ -334,6 +356,7 @@ class Window(QWidget):
     def closeEvent(self, event):
         if self.serialPort:
             self.serialPort.close()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
