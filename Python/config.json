@@ -1,6 +1,0 @@
-{
-  "port": "/dev/cu.usbmodemFA131",
-  "baudrate": "500000",
-  "use_passthrough": 1,
-  "bf_uart_number": 1
-}
