@@ -156,6 +156,9 @@ int main(void)
       case CMD_INFO:
         Logger_SendInfo();
         break;
+      case CMD_TEST:
+        Logger_SelfTest();
+        break;
       default:
         break;
       }

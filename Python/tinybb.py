@@ -79,7 +79,7 @@ def save_rx_data_to_file(ser):
             if len(d) > 0:
                 rx_counter += len(d)
                 f.write(d)
-                rx_counter_scaled = rx_counter // (2**16)
+                rx_counter_scaled = rx_counter // (2**15)
                 if rx_counter_scaled > rx_counter_scaled_prev:
                     print('.', end='', flush=True)
                     f.flush()
@@ -128,9 +128,37 @@ def func_dump(ser):
     save_rx_data_to_file(ser)
 
 
+def wait(ser):
+    counter = 0
+    while True:
+        res = ser.readline()
+        if len(res) == 0:
+            print('Operation not completed')
+            break
+        else:
+            res = res.decode().strip()
+            if len(res) == 1:  # heartbeat signal
+                print(res, end='')
+                counter += 1
+                if counter % 32 == 0:
+                    print()
+            else:
+                print()
+                print(res)
+            if res == 'Done':
+                break
+
+
 def func_erase(ser):
-    print('Erasing, wait ~30 seconds')
+    print('Erasing, wait ~40 seconds')
     ser.write('erase\n'.encode())
+    wait(ser)
+
+
+def func_test(ser):
+    print('Self-testing, wait ~3 min')
+    ser.write('test\n'.encode())
+    wait(ser)
 
 
 def func_exit(ser):
@@ -144,6 +172,7 @@ def main():
                      'r': ['Read memory', func_read],
                      'd': ['Dump full memory', func_dump],
                      'e': ['Erase', func_erase],
+                     't': ['Self-test', func_test],
                      'x': ['Exit', func_exit]})
     cli_argument = process_args()
     if cli_argument and cli_argument not in commands:

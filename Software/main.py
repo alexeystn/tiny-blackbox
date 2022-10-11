@@ -148,22 +148,29 @@ class SerialThread(QObject):
     def eraseFlash(self):
         if not self.isConnected:
             return
-        # TODO: make some feedback from MCU
         self.instance.write('erase\n'.encode())
         erasingTotalTime = 40
-        progressStep = 0.25
+        startTime = time.time()
         self.progressTextSignal.emit('')
         self.progressValueSignal.emit(0)
         self.statusTextSignal.emit('Erasing')
-        for i in range(round(erasingTotalTime / progressStep)):
-            progress = i/(erasingTotalTime / progressStep) * 100
+        while True:
+            elapsedTime = time.time() - startTime
+            progress = elapsedTime / erasingTotalTime * 100
             self.progressValueSignal.emit(round(progress))
-            #self.progressTextSignal.emit('{0:.0f}%'.format(progress))
-            self.progressTextSignal.emit('0:{0:02.0f}'.format(erasingTotalTime - i * progressStep))
-            time.sleep(progressStep)
-        self.statusTextSignal.emit('Done')
-        self.progressTextSignal.emit('')
-        self.progressValueSignal.emit(0)
+            self.progressTextSignal.emit('0:{0:02.0f}'.format(elapsedTime))
+            res = self.instance.readline()
+            res = res.decode().strip()
+            if len(res) == 0:
+                self.statusTextSignal.emit('Failed')
+                self.progressTextSignal.emit('')
+                self.progressValueSignal.emit(0)
+                break
+            if res == 'Done':
+                self.statusTextSignal.emit('Done')
+                self.progressTextSignal.emit('')
+                self.progressValueSignal.emit(0)
+                break
 
     def disconnectFromPort(self):
         self.instance.close()
@@ -296,7 +303,7 @@ class Window(QWidget):
             self.buttonConnect.setText('Connect')
 
     def buttonErasePress(self):
-        button = QMessageBox.question(self, 'Blackbox', "Do you want to erase flash?")
+        button = QMessageBox.question(self, 'Tiny Blackbox', "Do you want to erase flash?")
         if button == QMessageBox.Yes:
             self.eraseFlashSignal.emit()
 

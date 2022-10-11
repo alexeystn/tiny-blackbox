@@ -17,13 +17,81 @@ uint8_t uartRxBuf[W25_PAGE_SIZE*2];
 int pagePointer = 0;
 
 
+static void Send_SelfTest_Result(bool result)
+{
+  static char buf[32];
+  sprintf(buf, "Self-test result: %d\n", result);
+  HAL_UART_Transmit(HUART, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+}
+
+
+static void Send_Done(void)
+{
+  static const char buf[] = "Done\n";
+  HAL_UART_Transmit(HUART, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+}
+
+
+#define HEARTBEAT_PERIOD_MS 250
+static void Send_Heartbeat(void)
+{
+  static const char buf[] = ".\n";
+  static int previousTimeMs = 0;
+  int currentTimeMs = HAL_GetTick();
+  if ((currentTimeMs - previousTimeMs) > HEARTBEAT_PERIOD_MS) {
+    previousTimeMs = currentTimeMs + HEARTBEAT_PERIOD_MS;
+    HAL_UART_Transmit(HUART, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+  }
+}
+
+
+void Logger_SelfTest(void)
+{
+  uint8_t buf[W25_PAGE_SIZE + 1];
+  uint8_t bufCompare[W25_PAGE_SIZE];
+  int counter = 0;
+  bool result = true;
+  // Fill memory with incrementing numbers:
+  // 00000000 00000001 00000002 ...
+  for (int page = 0; page < W25_PAGE_COUNT; page++) {
+    for (int number = 0; number < (W25_PAGE_SIZE/8); number++) {
+      sprintf((char*)buf + number*8, "%08d", counter);
+      counter++;
+    }
+    W25_WriteEnable();
+    W25_WritePage(page, buf, W25_PAGE_SIZE);
+    // start timer
+    while (W25_GetStatus()) {};
+    // stop timer
+    Send_Heartbeat();
+  }
+  pagePointer = W25_PAGE_COUNT;
+  counter = 0;
+  for (int page = 0; page < W25_PAGE_COUNT; page++) {
+    for (int number = 0; number < (W25_PAGE_SIZE/8); number++) {
+      sprintf((char*)buf + number*8, "%08d", counter);
+      counter++;
+    }
+    W25_ReadPage(page, bufCompare);
+    if (memcmp(bufCompare, buf, W25_PAGE_SIZE) != 0) {
+      result = false;
+    }
+    Send_Heartbeat();
+  }
+  Send_SelfTest_Result(result);
+  Send_Done();
+}
+
+
 void Logger_Erase(void)
 {
   W25_WriteEnable();
   W25_ChipErase();
   while (W25_GetStatus()) {
-    HAL_Delay(100);
+    HAL_Delay(HEARTBEAT_PERIOD_MS);
+    Send_Heartbeat();
   }
+  Send_Done();
   pagePointer = 0;
 }
 

@@ -8,6 +8,7 @@ enum status_t Logger_WriteLoop(void);
 void Logger_Stop(void);
 void Logger_Read(bool readFullMemory);
 void Logger_SendInfo(void);
+void Logger_SelfTest(void);
 void Logger_Erase(void);
 bool Logger_IsMemoryFull(void);
 

@@ -8,6 +8,7 @@ enum cli_cmd_t {
   CMD_READ,
   CMD_DUMP,
   CMD_ERASE,
+  CMD_TEST,
   CMD_N
 };
 

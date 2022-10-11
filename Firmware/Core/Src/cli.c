@@ -14,7 +14,8 @@ const char cliCommands[CMD_N][CMD_MAX_LENGTH] = {
     "info",
     "read",
     "dump",
-    "erase"
+    "erase",
+    "test"
 };
 
 
