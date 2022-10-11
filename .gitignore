@@ -21,3 +21,5 @@ Firmware/Drivers/CMSIS/Include/core_cm7.h
 Firmware/Drivers/CMSIS/Include/core_sc000.h
 Firmware/Drivers/CMSIS/Include/core_sc300.h
 Firmware/Drivers/CMSIS/Include/mpu_armv8.h
+config.json
+Software/GUI/pyinstaller.txt
