@@ -4,6 +4,7 @@
 
 import time
 import serial
+import serial.tools.list_ports
 
 port_name = '/dev/cu.usbserial-A50285BI'
 
@@ -36,6 +37,14 @@ class SpeedMeasure:
 
 
 sm = SpeedMeasure()
+
+available_ports = [c.device for c in serial.tools.list_ports.comports()]
+print('Select one of the available ports:')
+for i, port in enumerate(available_ports):
+    print('{0}: {1}'.format(i + 1, port))
+print('>> ', end='')
+n = int(input())
+port_name = available_ports[n - 1]
 
 with serial.Serial(port_name, baudrate=1500000) as ser:
     for i in range(full_memory_size // bytes_per_number):
