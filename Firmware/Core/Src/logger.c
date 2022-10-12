@@ -189,6 +189,45 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 
+#define RING_BUFFER_SIZE 16
+uint8_t ringPageBuffer[RING_BUFFER_SIZE][W25_PAGE_SIZE];
+uint32_t ringCounterBuffer[RING_BUFFER_SIZE];
+uint8_t pointerIn;
+uint8_t pointerOut;
+
+static void ringBufferPush(uint8_t *buf, uint32_t cnt)
+{
+  memcpy(ringPageBuffer[pointerIn], buf, W25_PAGE_SIZE);
+  ringCounterBuffer[pointerIn] = cnt;
+  pointerIn++;
+  if (pointerIn == RING_BUFFER_SIZE) {
+    pointerIn = 0;
+  }
+  if (pointerIn == pointerOut) {
+    // TODO: handle overrun error
+  }
+}
+
+
+static void ringBufferTransmit(void)
+{
+  if (W25_GetStatus()) {
+    return;
+  }
+
+  if (pointerIn != pointerOut) {
+    W25_WriteEnable();
+    TEST_PIN_ON();
+    W25_WritePage(ringCounterBuffer[pointerOut], ringPageBuffer[pointerOut], W25_PAGE_SIZE);
+    TEST_PIN_OFF();
+    pointerOut++;
+    if (pointerOut == RING_BUFFER_SIZE) {
+      pointerOut = 0;
+    }
+  }
+}
+
+
 enum status_t Logger_WriteLoop(void)
 {
   static int prevRxTime = 0;
@@ -208,13 +247,13 @@ enum status_t Logger_WriteLoop(void)
     if (flag == DMA_FLAG_FULL) {
       bufPointer = &uartRxBuf[W25_PAGE_SIZE];
     }
+
     if (pagePointer < W25_PAGE_COUNT) {
-      W25_WriteEnable();
-      W25_WritePage(pagePointer, bufPointer, W25_PAGE_SIZE);
-      while (W25_GetStatus()) {};
+      ringBufferPush(bufPointer, pagePointer);
       pagePointer++;
     }
   }
+  ringBufferTransmit();
   if ((currTime - prevRxTime) < 100) {
     return STATUS_BUSY;
   } else {
