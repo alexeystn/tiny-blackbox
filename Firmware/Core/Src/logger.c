@@ -17,10 +17,20 @@ uint8_t uartRxBuf[W25_PAGE_SIZE*2];
 int pagePointer = 0;
 
 
-static void Send_SelfTest_Result(bool result)
+static void Send_SelfTest_Result(bool result, int avg, int max)
 {
-  static char buf[32];
-  sprintf(buf, "Self-test result: %d\n", result);
+  static char buf[64];
+  char res[16];
+  if (result) {
+    sprintf(res, "OK");
+  } else {
+    sprintf(res, "FAIL");
+  }
+  sprintf(buf, "Self-test result: %s\n", res);
+  HAL_UART_Transmit(HUART, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+  sprintf(buf, "Average page write time: %d us\n", avg);
+  HAL_UART_Transmit(HUART, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+  sprintf(buf, "Max page write time: %d us\n", max);
   HAL_UART_Transmit(HUART, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
 }
 
@@ -51,6 +61,8 @@ void Logger_SelfTest(void)
   uint8_t bufCompare[W25_PAGE_SIZE];
   int counter = 0;
   bool result = true;
+  uint32_t time, sum = 0, max = 0;
+
   // Fill memory with incrementing numbers:
   // 00000000 00000001 00000002 ...
   for (int page = 0; page < W25_PAGE_COUNT; page++) {
@@ -60,9 +72,13 @@ void Logger_SelfTest(void)
     }
     W25_WriteEnable();
     W25_WritePage(page, buf, W25_PAGE_SIZE);
-    // start timer
+    RESET_TIMER_US;
     while (W25_GetStatus()) {};
-    // stop timer
+    time = GET_TIMER_US;
+    if (time > max) {
+      max = time;
+    }
+    sum += time;
     Send_Heartbeat();
   }
   pagePointer = W25_PAGE_COUNT;
@@ -78,7 +94,7 @@ void Logger_SelfTest(void)
     }
     Send_Heartbeat();
   }
-  Send_SelfTest_Result(result);
+  Send_SelfTest_Result(result, sum / W25_PAGE_COUNT, max);
   Send_Done();
 }
 
@@ -157,6 +173,7 @@ void Logger_Init(void)
   W25_ResetClock();
   pagePointer = Logger_FindFirstEmptyPage();
   HAL_UART_Receive_DMA(&huart1, uartRxBuf, W25_PAGE_SIZE*2);
+  HAL_TIM_Base_Start(HTIM_US);
 }
 
 

@@ -69,6 +69,7 @@ void Error_Handler(void);
 #define KEY_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
+extern TIM_HandleTypeDef htim16;
 extern TIM_HandleTypeDef htim17;
 extern SPI_HandleTypeDef hspi1;
 extern UART_HandleTypeDef huart1;
