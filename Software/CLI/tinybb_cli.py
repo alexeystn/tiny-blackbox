@@ -36,7 +36,7 @@ def load_config():
         print('Select one of the available ports:')
         for i, port in enumerate(available_ports):
             print('{0}: {1}'.format(i+1, port))
-        print('> ', end='')
+        print('>> ', end='')
         n = int(input())
         config['port'] = available_ports[n-1]
     return config
@@ -130,6 +130,7 @@ def func_dump(ser):
 
 def wait(ser):
     counter = 0
+    need_newline = True
     while True:
         res = ser.readline()
         if len(res) == 0:
@@ -138,12 +139,14 @@ def wait(ser):
         else:
             res = res.decode().strip()
             if len(res) == 1:  # heartbeat signal
-                print(res, end='')
+                print(res, end='', flush=True)
                 counter += 1
                 if counter % 32 == 0:
                     print()
             else:
-                print()
+                if need_newline:
+                    print()
+                    need_newline = False
                 print(res)
             if res == 'Done':
                 break
@@ -198,7 +201,7 @@ def main():
             while True:
                 user_command = None
                 while user_command not in commands:
-                    print('> ', end='')
+                    print('>> ', end='')
                     user_command = input()
                 commands[user_command][1](ser)
                 if user_command == 'x':
