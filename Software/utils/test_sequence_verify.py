@@ -1,7 +1,28 @@
 # Check if log created with 'test_sequence_transmit'
 # was successfully recorded and read from flash.
+#
+# BBL file must be in the same directory
 
-filename = '../xxx.bbl'
+import os
+import sys
+
+file_list = [f for f in os.listdir() if f.endswith('.bbl')]
+
+if len(file_list) == 0:
+    print('No .bbl files found')
+    input()
+    sys.exit(0)
+
+file_list.sort()  
+print('Select file:')
+for i, file in enumerate(file_list):
+    print('{0}: {1}'.format(i+1, file))
+if len(file_list) == 1:
+    filename = file_list[0]
+else:
+    print('>> ', end='')
+    n = int(input())
+    filename = file_list[n-1]
 
 with open(filename, 'rb') as f:
     data = f.read()
@@ -22,3 +43,5 @@ for i in range(size):
         
 if error_count == 0:
     print('No errors detected')
+
+input()
