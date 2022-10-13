@@ -210,12 +210,21 @@ static void FIFO_Put(uint8_t *buf, uint32_t cnt)
   }
 }
 
-
+//#define FIFO_TEST_ENABLED // Add artificial delay to pageWrite for FIFO test
 static void FIFO_Transmit(void)
 {
+#ifdef FIFO_TEST_ENABLED
+  static int pauseCounter = 0;
+  if ((pauseCounter > 0) || (W25_GetStatus())) {
+    HAL_Delay(1);
+    pauseCounter--;
+    return;
+  }
+#else
   if (W25_GetStatus()) {
     return;
   }
+#endif
   if (fifoPtrIn != fifoPtrOut) {
     W25_WriteEnable();
     TEST_PIN_ON();
@@ -225,6 +234,9 @@ static void FIFO_Transmit(void)
     if (fifoPtrOut == FIFO_BUFFER_SIZE) {
       fifoPtrOut = 0;
     }
+#ifdef FIFO_TEST_ENABLED
+    pauseCounter = 2;
+#endif
   }
 }
 
