@@ -7,7 +7,8 @@ enum status_t {
   STATUS_IDLE_WRITE,
   STATUS_IDLE_READ,
   STATUS_BUSY,
-  STATUS_FULL
+  STATUS_FULL,
+  STATUS_ERROR
 };
 
 #define LED_OFF   LED_GPIO_Port->BRR = LED_Pin

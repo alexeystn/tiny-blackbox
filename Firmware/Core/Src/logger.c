@@ -276,6 +276,12 @@ bool Logger_IsMemoryFull(void)
 }
 
 
+bool Logger_IsFifoOverflow(void)
+{
+  return fifoOverflowFlag;
+}
+
+
 void Logger_SendInfo(void)
 {
   char str[100];

@@ -127,6 +127,9 @@ int main(void)
     if (Logger_IsMemoryFull()) {
       status = STATUS_FULL;
     }
+    if (Logger_IsFifoOverflow()) {
+      status = STATUS_ERROR;
+    }
     LED_SetStatus(status);
 
     if (isKeyPressed(1000)) {

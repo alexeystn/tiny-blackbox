@@ -11,6 +11,7 @@ void Logger_SendInfo(void);
 void Logger_SelfTest(void);
 void Logger_Erase(void);
 bool Logger_IsMemoryFull(void);
+bool Logger_IsFifoOverflow(void);
 
 uint8_t isKeyPressed(int delayMs);
 uint8_t isKeyUnpressed(int delayMs);
