@@ -189,40 +189,41 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 
-#define RING_BUFFER_SIZE 16
-uint8_t ringPageBuffer[RING_BUFFER_SIZE][W25_PAGE_SIZE];
-uint32_t ringCounterBuffer[RING_BUFFER_SIZE];
-uint8_t pointerIn;
-uint8_t pointerOut;
+#define FIFO_BUFFER_SIZE 16
+uint8_t fifoPageBuffer[FIFO_BUFFER_SIZE][W25_PAGE_SIZE];
+uint32_t fifoCounterBuffer[FIFO_BUFFER_SIZE];
+uint8_t fifoPtrIn;
+uint8_t fifoPtrOut;
+bool fifoOverflowFlag = false;
 
-static void ringBufferPush(uint8_t *buf, uint32_t cnt)
+
+static void FIFO_Put(uint8_t *buf, uint32_t cnt)
 {
-  memcpy(ringPageBuffer[pointerIn], buf, W25_PAGE_SIZE);
-  ringCounterBuffer[pointerIn] = cnt;
-  pointerIn++;
-  if (pointerIn == RING_BUFFER_SIZE) {
-    pointerIn = 0;
+  memcpy(fifoPageBuffer[fifoPtrIn], buf, W25_PAGE_SIZE);
+  fifoCounterBuffer[fifoPtrIn] = cnt;
+  fifoPtrIn++;
+  if (fifoPtrIn == FIFO_BUFFER_SIZE) {
+    fifoPtrIn = 0;
   }
-  if (pointerIn == pointerOut) {
-    // TODO: handle overrun error
+  if (fifoPtrIn == fifoPtrOut) {
+    fifoOverflowFlag = true;
   }
 }
 
 
-static void ringBufferTransmit(void)
+static void FIFO_Transmit(void)
 {
   if (W25_GetStatus()) {
     return;
   }
-
-  if (pointerIn != pointerOut) {
+  if (fifoPtrIn != fifoPtrOut) {
     W25_WriteEnable();
     TEST_PIN_ON();
-    W25_WritePage(ringCounterBuffer[pointerOut], ringPageBuffer[pointerOut], W25_PAGE_SIZE);
+    W25_WritePage(fifoCounterBuffer[fifoPtrOut], fifoPageBuffer[fifoPtrOut], W25_PAGE_SIZE);
     TEST_PIN_OFF();
-    pointerOut++;
-    if (pointerOut == RING_BUFFER_SIZE) {
-      pointerOut = 0;
+    fifoPtrOut++;
+    if (fifoPtrOut == FIFO_BUFFER_SIZE) {
+      fifoPtrOut = 0;
     }
   }
 }
@@ -249,12 +250,12 @@ enum status_t Logger_WriteLoop(void)
     }
 
     if (pagePointer < W25_PAGE_COUNT) {
-      ringBufferPush(bufPointer, pagePointer);
+      FIFO_Put(bufPointer, pagePointer);
       pagePointer++;
     }
   }
-  ringBufferTransmit();
-  if ((currTime - prevRxTime) < 100) {
+  FIFO_Transmit();
+  if ((currTime - prevRxTime) < 300) {
     return STATUS_BUSY;
   } else {
     return STATUS_IDLE_WRITE;
