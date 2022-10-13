@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QMessageBox, QFileDialog
 )
 from PyQt5.QtCore import Qt, QTimer, QSettings, pyqtSignal, QThread, QObject
+from PyQt5.QtGui import QIcon
 
 
 class Settings(QSettings):
@@ -243,6 +244,9 @@ class Window(QWidget):
         layout.addItem(QSpacerItem(100, 10))
         layout.addLayout(layoutActions)
 
+        bundle_dir = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+        path_to_icon = os.path.abspath(os.path.join(bundle_dir, 'icon.png'))
+        self.setWindowIcon(QIcon(path_to_icon))
         self.setWindowTitle("Tiny Blackbox")
         self.setLayout(layout)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowMinMaxButtonsHint)
