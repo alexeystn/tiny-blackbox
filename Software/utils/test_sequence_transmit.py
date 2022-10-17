@@ -9,10 +9,11 @@ import serial.tools.list_ports
 port_name = '/dev/cu.usbserial-A50285BI'
 
 full_memory_size = 128 * 1024 * 1024 // 8  # 128 MBit flash chip
-
 bytes_per_number = 8
-packet_length = 50
-packet_interval_sec = 0.003
+
+# adjustable parameters:
+packet_length = 50  # x 8 bytes
+packet_interval_sec = 0.01
 
 
 def encode_number(n):
@@ -43,13 +44,17 @@ print('Select one of the available ports:')
 for i, port in enumerate(available_ports):
     print('{0}: {1}'.format(i + 1, port))
 print('>> ', end='')
-n = int(input())
-port_name = available_ports[n - 1]
+p = int(input())
+port_name = available_ports[p - 1]
+
+packet = b''
 
 with serial.Serial(port_name, baudrate=1500000) as ser:
     for i in range(full_memory_size // bytes_per_number):
-        ser.write(encode_number(i))
+        packet += encode_number(i)
         if (i + 1) % packet_length == 0:
+            ser.write(packet)
+            packet = b''
             time.sleep(packet_interval_sec)
             if sm.put(bytes_per_number * packet_length):
                 print('{0:.1f}%'.format(i / (full_memory_size // bytes_per_number) * 100))
