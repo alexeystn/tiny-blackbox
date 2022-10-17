@@ -6,7 +6,7 @@ const uint8_t sequenceSingleBlink[] = {150, 2, 0};
 const uint8_t sequenceDoubleBlink[] = {100, 2, 20, 2, 0};
 const uint8_t sequenceFastBlink[] = {10, 10, 0};
 const uint8_t sequenceFull[] = {20, 2, 20, 2, 20, 2, 20, 100, 0};
-const uint8_t sequenceError[] = {20, 2, 20, 2, 20, 2, 20, 100, 20, 100, 20, 100, 0};
+const uint8_t sequenceError[] = {10, 2, 10, 2, 10, 2, 10, 2, 30, 2, 30, 2, 30, 2, 20, 0};
 
 const uint8_t *activeSequence = sequenceSingleBlink;
 uint8_t seqPnt = 0;
