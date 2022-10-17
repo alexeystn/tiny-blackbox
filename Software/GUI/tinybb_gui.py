@@ -30,6 +30,7 @@ class Settings(QSettings):
         """
         defaultConfig = {'port': 'COM1', 'type': 0, 'uart': 1, 'directory': ''}
         success = True
+        # TODO: try - except
         for item in defaultConfig:
             value = self.value(item)
             if value is None:
@@ -37,11 +38,15 @@ class Settings(QSettings):
             else:
                 self.currentConfig[item] = value
         if success:
-            print('Load: OK')
-            print(self.currentConfig)
+            print('Load settings: OK')
+            keys = list(self.currentConfig)
+            keys.sort()
+            for k in keys:
+                print(' ' + k + ': ' + str(self.currentConfig[k]))
         else:
             self.currentConfig = defaultConfig.copy()
-            print('Load: FAIL')
+            print('Load settings: FAIL')
+            print('Loading default config')
             self.save()
 
     def save(self):
@@ -71,6 +76,7 @@ class SerialThread(QObject):
         self.instance = serial.Serial(self.name, baudrate=500000, timeout=1)  # + param
         if config['type']:
             self.statusTextSignal.emit('Switching to Passthrough')
+            print('===== Betaflight CLI mode =====')
             self.instance.write(b'#\n')
             self.instance.readline()
             request_str = 'serialpassthrough ' + \
@@ -84,6 +90,7 @@ class SerialThread(QObject):
                 s = res.decode().strip()
                 if len(s) > 0:
                     print(' >> ' + s)
+            print('===============================')
         self.getInfo()
 
     def getInfo(self):
@@ -94,6 +101,7 @@ class SerialThread(QObject):
         resp = self.instance.readline()
         if len(resp) > 0:
             line = resp.decode().strip()
+            print(line)
             percents = 0
             try:
                 percents = float(line.split(sep='%')[0].split(sep=' ')[-1])
@@ -103,7 +111,7 @@ class SerialThread(QObject):
                 line = 'Cannot decode response'
             finally:
                 self.progressValueSignal.emit(int(percents))
-                self.progressTextSignal.emit('{0:.1f}% used'.format(percents))
+                self.progressTextSignal.emit('{0:.1f}%'.format(percents))
                 self.statusTextSignal.emit(line)
                 self.setConnectionStatus(True)
         else:
@@ -135,7 +143,7 @@ class SerialThread(QObject):
                     print('.', end='', flush=True)
                     f.flush()
                     if rx_counter_scaled % 32 == 0:
-                        print('{0:.0f} Mb'.format(rx_counter / (2 ** 20)))
+                        print(' {0:.0f} Mb'.format(rx_counter / (2 ** 20)))
                     rx_counter_scaled_prev = rx_counter_scaled
             else:
                 break
@@ -160,7 +168,7 @@ class SerialThread(QObject):
             progress = elapsedTime / erasingTotalTime * 100
             self.progressValueSignal.emit(round(progress))
             self.progressTextSignal.emit('0:{0:02.0f}'.format(elapsedTime))
-            res = self.instance.readline()
+            res = self.instance.readline()  # TODO: serial exception
             res = res.decode().strip()
             if len(res) == 0:
                 self.statusTextSignal.emit('Failed')
@@ -307,7 +315,7 @@ class Window(QWidget):
             self.buttonConnect.setText('Connect')
 
     def buttonErasePress(self):
-        button = QMessageBox.question(self, 'Tiny Blackbox', "Do you want to erase flash?")
+        button = QMessageBox.question(self, ' ', 'Do you want to erase flash?')
         if button == QMessageBox.Yes:
             self.eraseFlashSignal.emit()
 

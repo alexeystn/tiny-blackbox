@@ -7,8 +7,8 @@ import serial.tools.list_ports
 
 
 def get_default_config():
-    print('Loading default config.')
-    default_config = {"port": "COM0", "baudrate": 500000, "use_passthrough": 0, "bf_uart_number": 1}
+    print('Loading default config')
+    default_config = {"port": "COM0", "use_passthrough": 0, "bf_uart_number": 1}
     save_config(default_config)
     return default_config
 
@@ -18,12 +18,13 @@ def load_config():
         with open('config.json', 'r') as f:
             config = json.load(f)
     except FileNotFoundError:
-        print('File "config.json" not found.')
+        print('File "config.json" not found')
         config = get_default_config()
+        print('Check settings in "config.json"')
 
     except json.JSONDecodeError:
-        print('File "config.json" is corrupted.')
-        print('Would you like to reset settings? [Y/n].')
+        print('File "config.json" is corrupted')
+        print('Would you like to reset settings? [Y/n]')
         user_input = input()
         if user_input.upper() == 'Y':
             config = get_default_config()
@@ -32,7 +33,7 @@ def load_config():
 
     available_ports = [c.device for c in serial.tools.list_ports.comports()]
     if not config['port'] in available_ports:
-        print('Cannot find serial port \'{0}\''.format(config['port']))
+        print('Cannot find serial port "{0}"'.format(config['port']))
         print('Select one of the available ports:')
         for i, port in enumerate(available_ports):
             print('{0}: {1}'.format(i+1, port))
@@ -52,7 +53,7 @@ def bf_enable_passthrough(ser, config):
     print('===== Betaflight CLI mode =====')
     ser.write(b'#\n')
     ser.readline()
-    request_str = 'serialpassthrough ' + str(config['bf_uart_number'] - 1) + ' ' + str(config['baudrate']) + '\n'
+    request_str = 'serialpassthrough ' + str(config['bf_uart_number'] - 1) + ' 500000\n'
     ser.write(request_str.encode())
     while True:
         res = ser.readline()
@@ -61,7 +62,7 @@ def bf_enable_passthrough(ser, config):
         s = res.decode().strip()
         if len(s) > 0:
             print(' >> ' + s)
-    print('==============================')
+    print('===============================')
     print()
     time.sleep(1)
 
@@ -71,8 +72,8 @@ def save_rx_data_to_file(ser):
     rx_counter_scaled_prev = 0
     filename = 'Blackbox_Log_' + datetime.now().strftime('%Y%m%d_%H%M%S.bbl')
     f = open(filename, 'wb')
-    print('Downloading:')
-    print('Press ctrl+c to stop')
+    print('Downloading {0}:'.format(filename))
+    print('Press Ctrl+C to stop')
     try:
         while True:  # print dots and megabytes
             d = ser.read(1000)
@@ -83,7 +84,7 @@ def save_rx_data_to_file(ser):
                 if rx_counter_scaled > rx_counter_scaled_prev:
                     print('.', end='', flush=True)
                     f.flush()
-                    if rx_counter_scaled % 16 == 0:
+                    if rx_counter_scaled % 32 == 0:
                         print(' {0:.0f} Mb'.format(rx_counter/(2**20)))
                 rx_counter_scaled_prev = rx_counter_scaled
             else:
@@ -115,7 +116,8 @@ def func_information(ser):
     if len(resp) > 0:
         print(resp.decode().strip())
     else:
-        print('No response from Blackbox. Check if Read mode is ON. ')
+        print('No response from Blackbox')
+        print('Check if Read mode is ON')
 
 
 def func_read(ser):
@@ -184,19 +186,17 @@ def main():
 
     ser = None
     try:
-        ser = serial.Serial(config['port'], config['baudrate'], timeout=1)
+        ser = serial.Serial(config['port'], 500000, timeout=1)
         print('Open ' + config['port'] + ' successfully')
         save_config(config)
         if config['use_passthrough'] != 0:
             bf_enable_passthrough(ser, config)
         func_information(ser)
-        print()
         if cli_argument:
             commands[cli_argument][1](ser)
         else:
             for k in commands:
-                print(k + ' - ' + commands[k][0])
-            print()
+                print(' ' + k + ' - ' + commands[k][0])
             print('Enter command: ')
             while True:
                 user_command = None
