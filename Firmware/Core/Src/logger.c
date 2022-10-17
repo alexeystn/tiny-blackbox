@@ -235,7 +235,7 @@ static void FIFO_Transmit(void)
       fifoPtrOut = 0;
     }
 #ifdef FIFO_TEST_ENABLED
-    pauseCounter = 2;
+    pauseCounter = 3;
 #endif
   }
 }
