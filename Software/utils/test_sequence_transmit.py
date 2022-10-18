@@ -11,9 +11,13 @@ port_name = '/dev/cu.usbserial-A50285BI'
 full_memory_size = 128 * 1024 * 1024 // 8  # 128 MBit flash chip
 bytes_per_number = 8
 
-# adjustable parameters:
-packet_length = 50  # x 8 bytes
-packet_interval_sec = 0.01
+# Test in normal mode:
+# packet_length = 50  # x 8 bytes
+# packet_interval_sec = 0.03
+
+# Test with emulated write delay:
+packet_length = 500  # x 8 bytes
+packet_interval_sec = 0.1
 
 
 def encode_number(n):
@@ -52,7 +56,7 @@ packet = b''
 with serial.Serial(port_name, baudrate=1500000) as ser:
     for i in range(full_memory_size // bytes_per_number):
         packet += encode_number(i)
-        if (i + 1) % packet_length == 0:
+        if (i + 1) % packet_length == 0 or (i+1) == (full_memory_size // bytes_per_number):
             ser.write(packet)
             packet = b''
             time.sleep(packet_interval_sec)

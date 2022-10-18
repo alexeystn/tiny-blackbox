@@ -13,7 +13,7 @@ if len(file_list) == 0:
     input()
     sys.exit(0)
 
-file_list.sort()  
+file_list.sort()
 print('Select file:')
 for i, file in enumerate(file_list):
     print('{0}: {1}'.format(i+1, file))
@@ -40,8 +40,9 @@ for i in range(size):
         if error_count > 20:
             print('Too many errors')
             break
-        
+
 if error_count == 0:
+    print('{0}/{1} bytes'.format(len(data), 2**24))
     print('No errors detected')
 
 input()
