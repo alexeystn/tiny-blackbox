@@ -1,15 +1,15 @@
 # Tiny Blackbox
-![Photo](Images/tiny-blackbox.png)
+<img src="Images/tiny-blackbox.png" width="400" />
 
 Tiny Blackbox is an open source ultra-light external logger for micro drones.
 
-* Size: 9 x 14 mm
-* Weight: 0.47 g
-* Logging rate: up to 4 kHz 
+* Size: 8 x 13 mm
+* Weight: 0.32 g
+* Logging rate: up to 8 kHz 
 * Data rate: 1.5 Mbit/s
 * Current consumption: < 30 mA
 * Flash memory: 16 MB, W25Q128JVPIQ
-* MCU: STM32F042G6U6
+* MCU: STM32G031G8U6
 
 ![Whoop](Images/whoop.jpg)
 
@@ -26,7 +26,6 @@ Tiny Blackbox is an open source ultra-light external logger for micro drones.
 </details>
 
 ## Operating modes
-<img src="Images/modes.png" width="700" />
 
 ## Read recorded logs
 1) Configure `bf_uart_number` number in `config.json` to match blackbox port number in Betaflight.
@@ -87,8 +86,6 @@ Blackbox_Log_20210213_112830.bbl saved
 
 ![STLink](Images/swd.png)
 
-## Future plans
-* Cross-platform GUI
-* Support 8 kHz logging rate
+## Contacts
 
 Feel free to contact me in Telegram: [@AlexeyStn](https://t.me/AlexeyStn)
