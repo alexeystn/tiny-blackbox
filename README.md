@@ -1,7 +1,7 @@
 # Tiny Blackbox
-<img src="Images/tiny-blackbox.png" width="400" />
+<img src="Images/tiny-blackbox.png" width="500" />
 
-Tiny Blackbox is an open source ultra-light external logger for micro drones.
+Tiny Blackbox is an open source ultra-light external logger for micro drones.<br>
 
 * Size: 8 x 13 mm
 * Weight: 0.32 g
@@ -11,10 +11,11 @@ Tiny Blackbox is an open source ultra-light external logger for micro drones.
 * Flash memory: 16 MB, W25Q128JVPIQ
 * MCU: STM32G031G8U6
 
-![Whoop](Images/whoop.jpg)
+For previous version with F042 chip go to [this page](https://github.com/alexeystn/tiny-blackbox/tree/stm32f042)
 
 ## Setup
-![Pinout](Images/pinout.png)
+<img src="Images/pinout.png" width="250" />
+
 1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).
 2) Setup blackbox in Betaflight Configurator:
 * Ports tab: Peripherals -> Blackbox logging, speed 1500000.
@@ -26,6 +27,7 @@ Tiny Blackbox is an open source ultra-light external logger for micro drones.
 </details>
 
 ## Operating modes
+<img src="Images/modes.png" width="700" />
 
 ## Read recorded logs
 1) Configure `bf_uart_number` number in `config.json` to match blackbox port number in Betaflight.
@@ -82,9 +84,9 @@ Blackbox_Log_20210213_112830.bbl saved
 
 * Build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html)
 * Flash pre-built HEX-firmware with [STM32CubeProg](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html) or [STLink](https://github.com/stlink-org/stlink) toolset.
-* Connect ST-Link programmer to following pins:
+* Connect ST-Link programmer to SWDIO and SWCLK pins:
 
-![STLink](Images/swd.png)
+<img src="Images/swd.png" width="250" />
 
 ## Contacts
 
