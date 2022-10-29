@@ -6,8 +6,6 @@ import time
 import serial
 import serial.tools.list_ports
 
-port_name = '/dev/cu.usbserial-A50285BI'
-
 full_memory_size = 128 * 1024 * 1024 // 8  # 128 MBit flash chip
 bytes_per_number = 8
 
