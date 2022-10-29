@@ -136,7 +136,6 @@ def wait(ser):
     while True:
         res = ser.readline()
         if len(res) == 0:
-            print('Operation not completed')
             break
         else:
             res = res.decode().strip()
