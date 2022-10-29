@@ -1,7 +1,7 @@
 # Tiny Blackbox
 <img src="Images/tiny-blackbox.png" width="500" />
 
-Tiny Blackbox is an open source ultra-light external logger for micro drones.<br>
+Tiny Blackbox - open source ultra-light external logger for micro drones.<br>
 
 * Size: 8 x 13 mm
 * Weight: 0.32 g
@@ -22,7 +22,7 @@ For previous version with F042 chip go to [this page](https://github.com/alexeys
 * Modes tab: Blackbox -> assign to any available AUX switch.
 * Blackbox tab: Logging device -> Serial Port.
 <details>
-<summary>Screenshots</summary>
+<summary><b>Screenshots</b></summary>
 <img src="Images/betaflight.png">
 </details>
 
@@ -30,64 +30,39 @@ For previous version with F042 chip go to [this page](https://github.com/alexeys
 <img src="Images/modes.png" width="700" />
 
 ## Read recorded logs
-1) Configure `bf_uart_number` number in `config.json` to match blackbox port number in Betaflight.
-2) Connect the flight controller to PC.
-3) Hold button for 1 second to switch into Read mode (double blinks).
-4) Run Python script `tinybb.py`.  The script automatically turns your flight controller into _Serial Passthrough_ mode. 
-5) Save logs from flash to file with `r` command.
-6) Open file with Blackbox Explorer and enjoy :-)
+1) Download application on [Releases](https://github.com/alexeystn/tiny-blackbox/releases) page: "exe" for Windows, "app" for macOS.
+2) Connect flight controller to PC.
+3) Hold hardware button for 1 second to switch into Read mode (double blinks).
+4) Open application, configure connection parameters and press "Connect".
+5) Save logs to file and open them with Betaflight Blackbox Explorer.
+<img src="Images/screenshot.png"  width="200" />
 
-You may need to install `pySerial` module before running the script. Type `pip3 install pyserial` in command prompt (cmd.exe or Terminal).
+Also, you can connect Logger directly to PC with FTDI/CP2102 adapter, without flight controller. <br>
+Select "Serial-USB adapter" instead of "Betaflight passthrough".
 
 <details>
-<summary>Example of CLI output:</summary>
-  
-```
-Open /dev/cu.usbmodemFA131 successfully
+<summary><b>Optional: Run the source code</b></summary>
+<br>
+If you face some difficulties running exe/app, you can run GUI source code:
 
-===== Betafligh CLI mode =====
->> Entering CLI Mode, type 'exit' to return, or 'help'
->> # serialpassthrough 1 500000
->> Port1: 1
->> Port2: 20
->> Port1 opened, baud = 500000.
->> Forwarding, power cycle to exit.
-==============================
-
-Flash memory: 38.0% full
-
-i - Information
-r - Read memory
-d - Dump full memory
-e - Erase
-x - Exit
-
-Enter command: 
-> r
-
-Downloading:
-Press ctrl+c to stop
-................ 1 Mb
-................ 2 Mb
-................ 3 Mb
-................ 4 Mb
-................ 5 Mb
-................ 6 Mb
-.
-6391040 bytes received
-Blackbox_Log_20210213_112830.bbl saved
-> 
-```
+1) Get the latest version of [Python](https://www.python.org/downloads/). <br>
+Set "Add Python to PATH" checkbox while installing.
+2) Install additional modules. <br>
+Open "cmd.exe" (Windows) or "Terminal" (macOS) and enter: <br>
+`pip3 install pyserial` <br>
+`pip3 install PyQt5==5.15`
+3) Download and run GUI Python script: [tinybb_gui.py](https://raw.githubusercontent.com/alexeystn/tiny-blackbox/main/Software/GUI/tinybb_gui.py).
 </details>
 
 ## For developers and enthusiasts
 
-* Build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html)
+* PCB thickness 0.6 mm is optimum.
+* Build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html).
 * Flash pre-built HEX-firmware with [STM32CubeProg](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html) or [STLink](https://github.com/stlink-org/stlink) toolset.
 * Connect ST-Link programmer to SWDIO and SWCLK pins:
 
 <img src="Images/swd.png" width="250" />
 
 ## Contacts
-
+ 
 Feel free to contact me in Telegram: [@AlexeyStn](https://t.me/AlexeyStn)
