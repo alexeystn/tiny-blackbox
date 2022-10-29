@@ -24,3 +24,4 @@ Firmware/Drivers/CMSIS/Include/mpu_armv8.h
 config.json
 Software/GUI/pyinstaller.txt
 *.spec
+!Software/build
