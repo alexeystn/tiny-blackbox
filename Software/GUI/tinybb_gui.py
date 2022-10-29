@@ -157,6 +157,7 @@ class SerialThread(QObject):
     def eraseFlash(self):
         if not self.isConnected:
             return
+        old_version = False
         self.instance.write('erase\n'.encode())
         erasingTotalTime = 40
         startTime = time.time()
@@ -168,18 +169,19 @@ class SerialThread(QObject):
             progress = elapsedTime / erasingTotalTime * 100
             self.progressValueSignal.emit(round(progress))
             self.progressTextSignal.emit('0:{0:02.0f}'.format(elapsedTime))
-            res = self.instance.readline()  # TODO: serial exception
-            res = res.decode().strip()
-            if len(res) == 0:
-                self.statusTextSignal.emit('Failed')
-                self.progressTextSignal.emit('')
-                self.progressValueSignal.emit(0)
-                break
-            if res == 'Done':
+            if not old_version:
+                res = self.instance.readline()  # TODO: serial exception
+                res = res.decode().strip()
+            else:
+                time.sleep(0.2)
+            if res == 'Done' or (old_version and progress >= 100):
                 self.statusTextSignal.emit('Done')
                 self.progressTextSignal.emit('')
                 self.progressValueSignal.emit(0)
                 break
+            if len(res) == 0 and not old_version:
+                print('Looks like old version')
+                old_version = True
 
     def disconnectFromPort(self):
         self.instance.close()
