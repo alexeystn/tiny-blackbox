@@ -60,6 +60,7 @@ class SerialThread(QObject):
     progressTextSignal = pyqtSignal(str)
     statusTextSignal = pyqtSignal(str)
     connectionStatusSignal = pyqtSignal(bool)
+    throwErrorSignal = pyqtSignal()
 
     name = None
     instance = None
@@ -132,7 +133,11 @@ class SerialThread(QObject):
         rx_counter_scaled_prev = 0
         full_size = 16 * 1024 * 1024
         while True:  # print dots and megabytes
-            d = self.instance.read(10000)
+            try:
+                d = self.instance.read(10000)
+            except serial.SerialException:
+                self.throwErrorSignal.emit()
+                break
             if len(d) > 0:
                 rx_counter += len(d)
                 f.write(d)
@@ -169,11 +174,12 @@ class SerialThread(QObject):
             progress = elapsedTime / erasingTotalTime * 100
             self.progressValueSignal.emit(round(progress))
             self.progressTextSignal.emit('0:{0:02.0f}'.format(elapsedTime))
-            if not old_version:
-                res = self.instance.readline()  # TODO: serial exception
-                res = res.decode().strip()
-            else:
-                time.sleep(0.2)
+            try:
+                res = self.instance.readline()
+            except serial.SerialException:
+                self.throwErrorSignal.emit()
+                break
+            res = res.decode().strip()
             if res == 'Done' or (old_version and progress >= 100):
                 self.statusTextSignal.emit('Done')
                 self.progressTextSignal.emit('')
@@ -285,6 +291,7 @@ class Window(QWidget):
         self.worker.progressTextSignal.connect(self.updateProgressText)
         self.worker.statusTextSignal.connect(self.updateStatusText)
         self.worker.connectionStatusSignal.connect(self.applyConnectionStatus)
+        self.worker.throwErrorSignal.connect(self.throwError)
         self.startConnectionSignal.connect(self.worker.connectToPort)
         self.stopConnectionSignal.connect(self.worker.disconnectFromPort)
         self.saveLogToFileSignal.connect(self.worker.saveToFile)
@@ -307,6 +314,9 @@ class Window(QWidget):
 
     def updateStatusText(self, text):
         self.labelStatus.setText(text)
+
+    def throwError(self):
+        QMessageBox.critical(self, ' ', 'Connection lost!')
 
     def applyConnectionStatus(self, status):
         self.buttonErase.setEnabled(status)
