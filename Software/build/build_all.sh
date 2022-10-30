@@ -1,4 +1,7 @@
 #!/bin/bash
+
+VER="1.0.0"
+
 cd ../GUI/
 
 # build executable for macOS
@@ -17,8 +20,8 @@ docker run --rm -v "$PWD":/src/ pyinstaller-windows-add
 
 # move executables to "output"
 mkdir ../build/output
-mv dist/windows/Tiny_Blackbox.exe ../build/output/Tiny_Blackbox.exe 
-mv dist/Tiny_Blackbox.app ../build/output/Tiny_Blackbox.app 
+mv dist/windows/Tiny_Blackbox.exe "../build/output/Tiny_Blackbox_"$VER".exe"
+mv dist/Tiny_Blackbox.app "../build/output/Tiny_Blackbox_"$VER".app"
 
 # remove temporary files
 rm -r dist
