@@ -261,7 +261,7 @@ class Window(QWidget):
         layout.addLayout(layoutActions)
 
         bundle_dir = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
-        path_to_icon = os.path.abspath(os.path.join(bundle_dir, 'tiny_bb.ico'))
+        path_to_icon = os.path.abspath(os.path.join(bundle_dir, 'tinybb.ico'))
         self.setWindowIcon(QIcon(path_to_icon))
         self.setWindowTitle("Tiny Blackbox")
         self.setLayout(layout)
