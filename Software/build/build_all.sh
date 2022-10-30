@@ -9,9 +9,11 @@ pyinstaller tinybb_gui.py --name="Tiny_Blackbox" --windowed --onefile --icon "ti
 rm Tiny_Blackbox.spec
 
 # run Windows PyInstaller in Docker
-# this use "tinybb_gui_win.spec" file with Windows parameters
-# and removed "hooksconfig={}" line
-docker run --rm -v "$PWD":/src/ cdrx/pyinstaller-windows:python3
+# this use "tinybb_gui_win.spec" file with removed "hooksconfig={}" line
+# option A: run public image from repository
+## docker run --rm -v "$PWD":/src/ cdrx/pyinstaller-windows:python3
+# option B: run personal container with pre-installed dependencies
+docker run --rm -v "$PWD":/src/ pyinstaller-windows-add
 
 # move executables to "output"
 mkdir ../build/output
