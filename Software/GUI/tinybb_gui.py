@@ -117,7 +117,7 @@ class SerialThread(QObject):
                 self.setConnectionStatus(True)
         else:
             self.disconnectFromPort()
-            self.statusTextSignal.emit('No response from Blackbox')
+            self.statusTextSignal.emit('No response - check mode')
             self.progressValueSignal.emit(0)
             self.progressTextSignal.emit('')
 
