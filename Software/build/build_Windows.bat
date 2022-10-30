@@ -1,7 +1,3 @@
-pyinstaller ../GUI/tinybb_gui.py --name="Tiny Blackbox" --windowed --onefile --add-data="..\resources\tiny_bb.ico;." --icon "../resources/tiny_bb.ico"
-move ".\dist\Tiny Blackbox.exe" "Tiny Blackbox.exe"
-rmdir ../GUI/__pycache__ /s /q
-rmdir build /s /q
-rmdir dist /s /q
-del "Tiny Blackbox.spec"
-:: replace ; with : for macOS
+cd ../GUI
+pyinstaller tinybb_gui.py --name="Tiny_Blackbox" --windowed --onefile --add-data="tiny_bb.ico;." --icon "tiny_bb.ico"
+del "Tiny_Blackbox.spec"
