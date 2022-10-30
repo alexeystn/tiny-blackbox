@@ -1,9 +1,6 @@
 Firmware/Debug/*
-Firmware_Old/Debug/*
 *.bin
 *.bbl
-Python/*.json
-!Python/config.json
 !Firmware/Debug/BlackBox.hex
 !Firmware_Old/Debug/BlackBox.hex
 LICENSE.txt
@@ -22,6 +19,5 @@ Firmware/Drivers/CMSIS/Include/core_sc000.h
 Firmware/Drivers/CMSIS/Include/core_sc300.h
 Firmware/Drivers/CMSIS/Include/mpu_armv8.h
 config.json
-Software/GUI/pyinstaller.txt
-*.spec
 !Software/build
+Software/build/output
