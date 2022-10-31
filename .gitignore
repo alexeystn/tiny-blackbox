@@ -1,8 +1,7 @@
-Firmware/Debug/*
 *.bin
 *.bbl
-!Firmware/Debug/BlackBox.hex
-!Firmware_Old/Debug/BlackBox.hex
+Firmware/Debug/*
+!Firmware/Debug/Blackbox.hex
 LICENSE.txt
 Firmware/Drivers/CMSIS/Include/core_armv81mml.h
 Firmware/Drivers/CMSIS/Include/core_armv8mbl.h
