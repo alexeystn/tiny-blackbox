@@ -57,8 +57,8 @@ Open "cmd.exe" (Windows) or "Terminal" (macOS) and enter: <br>
 ## For developers and enthusiasts
 
 * PCB thickness 0.6 mm is optimum.
-* Build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html).
-* Flash pre-built HEX-firmware with [STM32CubeProg](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html) or [STLink](https://github.com/stlink-org/stlink) toolset.
+* Edit and build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html).
+* Flash pre-built [HEX-firmware](/Firmware/Debug/Blackbox.hex) with [STM32CubeProgrammer](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html) or [STLink](https://github.com/stlink-org/stlink) toolset.
 * Connect ST-Link programmer to SWDIO and SWCLK pins:
 
 <img src="Images/swd.png" width="250" />
