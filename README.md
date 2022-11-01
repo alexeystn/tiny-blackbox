@@ -16,7 +16,8 @@ For previous version with F042 chip go to [this page](https://github.com/alexeys
 ## Setup
 <img src="Images/pinout.png" width="250" />
 
-1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).
+1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).<br>
+Signal wires must be tightly twisted.
 2) Setup blackbox in Betaflight Configurator:
 * Ports tab: Peripherals -> Blackbox logging, speed 1500000.
 * Modes tab: Blackbox -> assign to any available AUX switch.
@@ -51,14 +52,29 @@ Set "Add Python to PATH" checkbox while installing.
 Open "cmd.exe" (Windows) or "Terminal" (macOS) and enter: <br>
 `pip3 install pyserial` <br>
 `pip3 install PyQt5==5.15`
-3) Download and run GUI Python script: [tinybb_gui.py](https://raw.githubusercontent.com/alexeystn/tiny-blackbox/main/Software/GUI/tinybb_gui.py).
+3) Download and run GUI Python script: [tinybb_gui.py](/Software/GUI/tinybb_gui.py).
+</details>
+
+<details>
+<summary><b>Optional: Command line interface</b></summary>
+
+CLI Python script for downloading logs is also available.<br>
+Install Python and `pyserial` as described in section above.<br>
+Run CLI script: [tinybb_cli.py](/Software/CLI/tinybb_cli.py)
+
 </details>
 
 ## For developers and enthusiasts
 
-* PCB thickness 0.6 mm is optimum.
+* Use [EasyEDA](https://easyeda.com/editor) online editor to modify the board.
+* PCB thickness 0.6 mm is optimum for weight/reliability.
+* X5R/X7R capacitors are recommended.
 * Edit and build firmware using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html).
-* Flash pre-built [HEX-firmware](/Firmware/Debug/Blackbox.hex) with [STM32CubeProgrammer](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html) or [STLink](https://github.com/stlink-org/stlink) toolset.
+* Flash pre-built [HEX-firmware](/Firmware/Debug/Blackbox.hex) with [STM32CubeProgrammer](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html) or [STLink](https://github.com/stlink-org/stlink) toolset.<br> 
+Use following commands to flash with STLink tool:<br>
+`st-flash erase`<br>
+`st-flash --format ihex write "Blackbox.hex"`<br>
+`st-flash reset`
 * Connect ST-Link programmer to SWDIO and SWCLK pins:
 
 <img src="Images/swd.png" width="250" />
