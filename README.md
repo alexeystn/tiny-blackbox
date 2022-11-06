@@ -8,7 +8,9 @@ Tiny Blackbox - open source ultra-light external logger for micro drones.<br>
 * Logging rate: up to 8 kHz 
 * Data rate: 1.5 Mbit/s
 * Current consumption: < 30 mA
-* Flash memory: 16 MB, W25Q128JVPIQ
+* Flash memory: 16 MB, W25Q128JVPIQ <br>
+ &gt; 3 min at 4 kHz, full log <br>
+ &gt; 45 min at 1 kHz, gyro-only log (all other fields disabled)
 * MCU: STM32G031G8U6
 
 For previous version with F042 chip go to [this page](https://github.com/alexeystn/tiny-blackbox/tree/stm32f042)
