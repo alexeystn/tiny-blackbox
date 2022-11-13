@@ -19,7 +19,9 @@ For previous version with F042 chip go to [this page](https://github.com/alexeys
 <img src="Images/pinout.png" width="250" />
 
 1) Connect the device to any free UART port on your flight controller (RX->TX, TX->RX).<br>
-Signal wires must be tightly twisted.
+Signal wires must be tightly twisted to prevent interference.
+<img src="Images/wire.png" width="200" />
+
 2) Setup blackbox in Betaflight Configurator:
 * Ports tab: Peripherals -> Blackbox logging, speed 1500000.
 * Modes tab: Blackbox -> assign to any available AUX switch.
