@@ -47,10 +47,10 @@ Please use Tiny Blackbox with Betaflight 4.3.0, 4.3.2+ or 4.2.x.
 Also, you can connect Logger directly to PC with FTDI/CP2102 adapter, without flight controller. <br>
 Select "Serial-USB adapter" instead of "Betaflight passthrough".
 
+<b>Notice:</b> Tiny-blackbox GUI may trigger antivirus alerts sometimes. This happens because binaries were built using "PyInstaller". You can add Tiny-blackbox executable to antivirus exception list or else run directly the source code.
+
 <details>
 <summary><b>Optional: Run the source code</b></summary>
-<br>
-If you face some difficulties running exe/app, you can run GUI source code:
 
 1) Get the latest version of [Python](https://www.python.org/downloads/). <br>
 Set "Add Python to PATH" checkbox while installing.
