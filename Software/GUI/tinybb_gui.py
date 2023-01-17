@@ -213,7 +213,7 @@ class Window(QWidget):
         self.comboBoxPort.setFixedWidth(170)
         self.comboBoxType = QComboBox()
         self.comboBoxType.addItems(self.connectionTypes)
-        self.comboBoxType.setCurrentIndex(self.settings.currentConfig['type'])
+        self.comboBoxType.setCurrentIndex(int(self.settings.currentConfig['type']))
         self.comboBoxType.setFixedWidth(170)
         self.lineEditUart = QLineEdit(str(self.settings.currentConfig['uart']))
         self.lineEditUart.setFixedWidth(170)
