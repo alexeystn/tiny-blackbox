@@ -31,7 +31,7 @@ Signal wires must be tightly twisted to prevent interference.
 <img src="Images/betaflight.png">
 </details>
 <b>Warning!</b> Betaflight 4.3.1 has a bug in USB code, so logs might be corrupted when downloaded to PC. <br>
-Please use Tiny Blackbox with Betaflight 4.3.0, 4.3.2+ or 4.2.x.
+Please use Tiny Blackbox with Betaflight 4.4.x, 4.3.0, 4.3.2+ or 4.2.x.
 
 ## Operating modes
 <img src="Images/modes.png" width="700" />
